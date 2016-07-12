@@ -28,7 +28,7 @@ function drawSquare(squareProps, canvas) {
 }
 
 function drawXor(xorProps, canvas) {
-
+    console.log(xorProps);
 }
 
 function makeMouseTracker(draggable) {

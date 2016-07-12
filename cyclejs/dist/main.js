@@ -13931,7 +13931,9 @@ function makeGridDriver(canvasElt) {
 
 function drawSquare(squareProps, canvas) {}
 
-function drawXor(xorProps, canvas) {}
+function drawXor(xorProps, canvas) {
+	console.log(xorProps);
+}
 
 function makeMouseTracker(draggable) {
 
@@ -14016,16 +14018,28 @@ var _GridDriver = require('./GridDriver');
 
 var _GridDriver2 = _interopRequireDefault(_GridDriver);
 
+function xorify(ev) {
+				return { eventType: "xor",
+								startX: ev.startX,
+								startY: ev.startY,
+								x: ev.x,
+								y: ev.y };
+}
+
 function main(sources) {
-    return {
-        GridDriver: sources.GridDriver().map(function (ev) {
-            console.log(ev);return ev;
-        })
-    };
+				return {
+								GridDriver: sources.GridDriver()
+								//	    .map(ev => {console.log(ev); return ev;})
+								.filter(function (ev) {
+												return ev.eventType === "up";
+								}).map(function (ev) {
+												return xorify(ev);
+								})
+				};
 }
 
 var drivers = {
-    GridDriver: _GridDriver2['default'].makeGridDriver("#canvas")
+				GridDriver: _GridDriver2['default'].makeGridDriver("#canvas")
 };
 
 _cycleCore2['default'].run(main, drivers);
