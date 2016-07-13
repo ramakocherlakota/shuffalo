@@ -13913,6 +13913,10 @@ function makeGridDriver(canvasElt) {
 	var mouseTracker$ = makeMouseTracker(canvas);
 
 	return function track(source$) {
+		source$.subscribe(function (event) {
+			return console.log(event);
+		});
+
 		source$.filter(function (event) {
 			return event.eventType === "square";
 		}).subscribe(function (event) {
@@ -13920,9 +13924,9 @@ function makeGridDriver(canvasElt) {
 		});
 
 		source$.filter(function (event) {
-			return event.eventType === "xor";
+			return event.eventType === "toggleLines";
 		}).subscribe(function (event) {
-			return drawXor(event, canvas);
+			return toggleLines(event, canvas);
 		});
 
 		return mouseTracker$;
@@ -13931,9 +13935,7 @@ function makeGridDriver(canvasElt) {
 
 function drawSquare(squareProps, canvas) {}
 
-function drawXor(xorProps, canvas) {
-	console.log(xorProps);
-}
+function toggleLines(xorProps, canvas) {}
 
 function makeMouseTracker(draggable) {
 
@@ -13999,7 +14001,9 @@ function makeMouseTracker(draggable) {
 			return followMouseHV$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 		});
 
-		return down$.merge(up$).merge(dragger$);
+		return { down: down$,
+			up: up$,
+			dragger: dragger$ };
 	};
 }
 
@@ -14018,28 +14022,17 @@ var _GridDriver = require('./GridDriver');
 
 var _GridDriver2 = _interopRequireDefault(_GridDriver);
 
-function xorify(ev) {
-				return { eventType: "xor",
-								startX: ev.startX,
-								startY: ev.startY,
-								x: ev.x,
-								y: ev.y };
-}
-
 function main(sources) {
-				return {
-								GridDriver: sources.GridDriver()
-								//	    .map(ev => {console.log(ev); return ev;})
-								.filter(function (ev) {
-												return ev.eventType === "up";
-								}).map(function (ev) {
-												return xorify(ev);
-								})
-				};
+    var dragger$ = sources.GridDriver().dragger;
+    return {
+        GridDriver: dragger$.map(function (ev) {
+            return ev;
+        })
+    };
 }
 
 var drivers = {
-				GridDriver: _GridDriver2['default'].makeGridDriver("#canvas")
+    GridDriver: _GridDriver2['default'].makeGridDriver("#canvas")
 };
 
 _cycleCore2['default'].run(main, drivers);

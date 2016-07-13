@@ -13,11 +13,14 @@ function makeGridDriver(canvasElt) {
     let mouseTracker$ = makeMouseTracker(canvas);
 
     return function track(source$) {
+	source$
+	    .subscribe(event => console.log(event));
+
 	source$.filter(event => event.eventType === "square")
 	    .subscribe(event => drawSquare(event, canvas))
 
-	source$.filter(event => event.eventType === "xor")
-	    .subscribe(event => drawXor(event, canvas))
+	source$.filter(event => event.eventType === "toggleLines")
+	    .subscribe(event => toggleLines(event, canvas))
 
 	return mouseTracker$;
     }    
@@ -27,8 +30,8 @@ function drawSquare(squareProps, canvas) {
 
 }
 
-function drawXor(xorProps, canvas) {
-    console.log(xorProps);
+function toggleLines(xorProps, canvas) {
+
 }
 
 function makeMouseTracker(draggable) {
@@ -88,7 +91,9 @@ function makeMouseTracker(draggable) {
 
 	});
 
-	return down$.merge(up$).merge(dragger$);
+	return {down : down$,
+		up : up$,
+		dragger : dragger$};
     }
 }
 
