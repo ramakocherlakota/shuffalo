@@ -85,10 +85,21 @@ function makeMouseTracker(draggable) {
 		return {eventType: "move", direction : hv, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
 	    }
 
-	    var followMouseHV$ =  mouseMove$.withLatestFrom(firstDirection$, makeOutput);
+	    var movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, makeOutput);
 
-	    return followMouseHV$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
+	    var movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 
+	    var moveDone$ = movesUntilDone$.last().map(function(p) {
+		return {
+		    eventType : "moveDone",
+		    direction : p.direction,
+		    by : p.by,
+		    at : p.at
+		};
+	    });
+
+
+	    return movesUntilDone$.merge(moveDone$);
 	});
 
 	return {down : down$,
