@@ -13,11 +13,8 @@ function makeGridDriver(canvasElt) {
     let mouseTracker$ = makeMouseTracker(canvas);
 
     return function(source$) {
-//	source$
-//	    .subscribe(event => console.log(event));
-
-	source$.filter(event => event.eventType === "square")
-	    .subscribe(event => drawSquare(event, canvas))
+	source$
+	    .subscribe(event => console.log(event));
 
 	source$.filter(event => event.eventType === "showLines")
 	    .subscribe(event => showLines(event, canvas))
@@ -77,7 +74,6 @@ function makeMouseTracker(draggable) {
 		}})
 		.first();
 
-
 	    var offsetFunctionMap = {
 		horz : function(p) {return p.x;},
 		vert : function(p) {return p.y;}
@@ -96,7 +92,7 @@ function makeMouseTracker(draggable) {
 
 	    var movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 
-	    var moveDone$ = movesUntilDone$.last().map(function(p) {
+	    var moveDone$ = movesUntilDone$.startWith({by : 0}).last().map(function(p) {
 		return {
 		    eventType : "moveDone",
 		    direction : p.direction,
@@ -107,7 +103,7 @@ function makeMouseTracker(draggable) {
 
 
 	    return movesUntilDone$.merge(moveDone$)
-	}).startWith({});
+	});
 
 	return {down : down$,
 		up : up$,
