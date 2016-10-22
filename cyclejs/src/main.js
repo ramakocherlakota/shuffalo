@@ -7,7 +7,7 @@ function main(sources) {
     let showLines$ = gridDriver.down.map(ev => {return {eventType : "showLines"}});
     let hideLines$ = gridDriver.up.map(ev => {return {eventType : "hideLines"}});
 
-    let gridEvent$ = dragger$.merge(showLines$).merge(hideLines$);
+    let gridEvent$ = showLines$.merge(hideLines$).merge(dragger$);
 
     return {
 	GridDriver: gridEvent$

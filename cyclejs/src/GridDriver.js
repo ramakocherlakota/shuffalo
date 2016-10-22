@@ -13,17 +13,17 @@ function makeGridDriver(canvasElt) {
     let mouseTracker$ = makeMouseTracker(canvas);
 
     return function(source$) {
-	source$
-	    .subscribe(event => console.log(event));
+//	source$
+//	    .subscribe(event => console.log(event));
 
-//	source$.filter(event => event.eventType === "square")
-//	    .subscribe(event => drawSquare(event, canvas))
-//
-//	source$.filter(event => event.eventType === "showLines")
-//	    .subscribe(event => showLines(event, canvas))
-//
-//	source$.filter(event => event.eventType === "hideLines")
-//	    .subscribe(event => hideLines(event, canvas))
+	source$.filter(event => event.eventType === "square")
+	    .subscribe(event => drawSquare(event, canvas))
+
+	source$.filter(event => event.eventType === "showLines")
+	    .subscribe(event => showLines(event, canvas))
+
+	source$.filter(event => event.eventType === "hideLines")
+	    .subscribe(event => hideLines(event, canvas))
 
 	return mouseTracker$;
     }    
@@ -106,8 +106,8 @@ function makeMouseTracker(draggable) {
 	    });
 
 
-	    return movesUntilDone$.merge(moveDone$);
-	});
+	    return movesUntilDone$.merge(moveDone$)
+	}).startWith({});
 
 	return {down : down$,
 		up : up$,
