@@ -13902,6 +13902,29 @@ var ReactiveTest = Rx.ReactiveTest = {
 
 var Rx = require("rx-dom");
 
+var EventMapper = {
+				mapGridEvent: mapGridEvent
+};
+
+function mapGridEvent(events) {
+				return events.map(function (ev) {
+								if (ev.eventType === "down") {
+												return { eventType: "showLines" };
+								} else if (ev.eventType === "up") {
+												return { eventType: "hideLines" };
+								} else {
+												return ev;
+								}
+				});
+}
+
+module.exports = EventMapper;
+
+},{"rx-dom":4}],7:[function(require,module,exports){
+"use strict";
+
+var Rx = require("rx-dom");
+
 var GridDriver = {
 	makeGridDriver: makeGridDriver
 };
@@ -13912,22 +13935,19 @@ function makeGridDriver(canvasElt) {
 
 	var mouseTracker$ = makeMouseTracker(canvas);
 
-	return function track(source$) {
+	return function (source$) {
 		source$.subscribe(function (event) {
 			return console.log(event);
 		});
 
-		source$.filter(function (event) {
-			return event.eventType === "square";
-		}).subscribe(function (event) {
-			return drawSquare(event, canvas);
-		});
-
-		source$.filter(function (event) {
-			return event.eventType === "toggleLines";
-		}).subscribe(function (event) {
-			return toggleLines(event, canvas);
-		});
+		//	source$.filter(event => event.eventType === "square")
+		//	    .subscribe(event => drawSquare(event, canvas))
+		//
+		//	source$.filter(event => event.eventType === "showLines")
+		//	    .subscribe(event => showLines(event, canvas))
+		//
+		//	source$.filter(event => event.eventType === "hideLines")
+		//	    .subscribe(event => hideLines(event, canvas))
 
 		return mouseTracker$;
 	};
@@ -13935,7 +13955,13 @@ function makeGridDriver(canvasElt) {
 
 function drawSquare(squareProps, canvas) {}
 
-function toggleLines(xorProps, canvas) {}
+function showLines(xorProps, canvas) {
+	console.log("show lines");
+}
+
+function hideLines(xorProps, canvas) {
+	console.log("hide lines");
+}
 
 function makeMouseTracker(draggable) {
 
@@ -14020,7 +14046,7 @@ function makeMouseTracker(draggable) {
 
 module.exports = GridDriver;
 
-},{"rx-dom":4}],7:[function(require,module,exports){
+},{"rx-dom":4}],8:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -14033,12 +14059,24 @@ var _GridDriver = require('./GridDriver');
 
 var _GridDriver2 = _interopRequireDefault(_GridDriver);
 
+var _EventMapper = require('./EventMapper');
+
+var _EventMapper2 = _interopRequireDefault(_EventMapper);
+
 function main(sources) {
-    var dragger$ = sources.GridDriver().dragger;
+    var gridDriver = sources.GridDriver();
+    var dragger$ = gridDriver.dragger;
+    var showLines$ = gridDriver.down.map(function (ev) {
+        return { eventType: "showLines" };
+    });
+    var hideLines$ = gridDriver.up.map(function (ev) {
+        return { eventType: "hideLines" };
+    });
+
+    var gridEvent$ = dragger$.merge(showLines$).merge(hideLines$);
+
     return {
-        GridDriver: dragger$.map(function (ev) {
-            return ev;
-        })
+        GridDriver: gridEvent$
     };
 }
 
@@ -14048,4 +14086,4 @@ var drivers = {
 
 _cycleCore2['default'].run(main, drivers);
 
-},{"./GridDriver":6,"@cycle/core":1}]},{},[7]);
+},{"./EventMapper":6,"./GridDriver":7,"@cycle/core":1}]},{},[8]);
