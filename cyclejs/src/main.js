@@ -1,6 +1,5 @@
 import Cycle from '@cycle/core';
 import GridDriver from './GridDriver';
-import EventMapper from './EventMapper';
 
 function main(sources) {
     let gridDriver = sources.GridDriver();

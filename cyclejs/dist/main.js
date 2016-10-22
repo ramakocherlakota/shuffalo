@@ -13902,29 +13902,6 @@ var ReactiveTest = Rx.ReactiveTest = {
 
 var Rx = require("rx-dom");
 
-var EventMapper = {
-				mapGridEvent: mapGridEvent
-};
-
-function mapGridEvent(events) {
-				return events.map(function (ev) {
-								if (ev.eventType === "down") {
-												return { eventType: "showLines" };
-								} else if (ev.eventType === "up") {
-												return { eventType: "hideLines" };
-								} else {
-												return ev;
-								}
-				});
-}
-
-module.exports = EventMapper;
-
-},{"rx-dom":4}],7:[function(require,module,exports){
-"use strict";
-
-var Rx = require("rx-dom");
-
 var GridDriver = {
 	makeGridDriver: makeGridDriver
 };
@@ -14046,7 +14023,7 @@ function makeMouseTracker(draggable) {
 
 module.exports = GridDriver;
 
-},{"rx-dom":4}],8:[function(require,module,exports){
+},{"rx-dom":4}],7:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -14058,10 +14035,6 @@ var _cycleCore2 = _interopRequireDefault(_cycleCore);
 var _GridDriver = require('./GridDriver');
 
 var _GridDriver2 = _interopRequireDefault(_GridDriver);
-
-var _EventMapper = require('./EventMapper');
-
-var _EventMapper2 = _interopRequireDefault(_EventMapper);
 
 function main(sources) {
     var gridDriver = sources.GridDriver();
@@ -14086,4 +14059,4 @@ var drivers = {
 
 _cycleCore2['default'].run(main, drivers);
 
-},{"./EventMapper":6,"./GridDriver":7,"@cycle/core":1}]},{},[8]);
+},{"./GridDriver":6,"@cycle/core":1}]},{},[7]);
