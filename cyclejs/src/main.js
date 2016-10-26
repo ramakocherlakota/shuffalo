@@ -6,7 +6,7 @@ let Rx = require(`rx-dom`)
 function main(sources) {
     let gridDriver = sources.GridDriver();
     let dragger$ = gridDriver.dragger;
-    let img$ = Rx.Observable.of({eventType : "img"});
+    let img$ = Rx.Observable.of({eventType : "img", imageFile: "file:///Users/rama/work/shuffalo/cyclejs/img/zero8.jpg"}); // TODO figure out how to put image in browserify package, don't hard code it here
 
     let gridEvent$ = dragger$.merge(img$);
 

@@ -1,3 +1,5 @@
+// TODO get rid of tabs, use spaces
+
 let Rx = require(`rx-dom`)
 
 let GridDriver = {
@@ -44,7 +46,6 @@ var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
 
 function img(event, canvas) {
-    console.log("draw image");
     if (!oCanvas) {
 	oCanvas = document.createElement("canvas");
 	oCanvas.width = canvas.width;
@@ -54,15 +55,36 @@ function img(event, canvas) {
 	oCanvasGrid.height = canvas.height;
     }
 
-    var oContext = oCanvas.getContext("2d");
-    oContext.fillStyle = "orange";
-    oContext.fillRect(0, 0, oCanvas.width, oCanvas.height);
+    var img = new Image();
+    img.src = event.imageFile;
+    img.onload = function() {
+	var oContext = oCanvas.getContext("2d");
+	oContext.drawImage(img, 0, 0, oCanvas.width, oCanvas.height);
 
-    var oContextGrid = oCanvasGrid.getContext("2d");
-    oContextGrid.fillStyle = "blue";
-    oContextGrid.fillRect(0, 0, oCanvas.width, oCanvas.height);
+	var ctx = canvas.getContext("2d");
+	ctx.drawImage(oCanvas, 0, 0);
 
-    hideLines(event, canvas);
+	var oContextGrid = oCanvasGrid.getContext("2d");
+
+	// TODO hard-coded gridding
+	oContextGrid.drawImage(img, 0, 0, oCanvas.width, oCanvas.height);
+	for (var j = 1; j<10; j++) {
+	    oContextGrid.beginPath();
+	    oContextGrid.moveTo(j * 30, 0);
+	    oContextGrid.lineTo(j * 30, oCanvas.height);
+	    oContextGrid.stroke();
+	    
+	    oContextGrid.beginPath();
+	    oContextGrid.moveTo(0, j * 40);
+	    oContextGrid.lineTo(oCanvas.width, j * 40);
+	    oContextGrid.stroke();
+	}
+    }
+    img.onerror = function(err) {
+	// TODO do something useful
+	console.log("Error loading image: " + err);
+    }
+
 }
 
 function makeMouseTracker(draggable) {
