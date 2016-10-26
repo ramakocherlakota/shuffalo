@@ -14,13 +14,7 @@ function makeGridDriver(canvasElt) {
 
     return function(source$) {
 	source$
-	    .subscribe(event => console.log(event));
-
-	source$.filter(event => event.eventType === "showLines")
-	    .subscribe(event => showLines(event, canvas))
-
-	source$.filter(event => event.eventType === "hideLines")
-	    .subscribe(event => hideLines(event, canvas))
+	    .subscribe(event => console.log("from source: " + event.eventType));
 
 	source$.filter(event => event.eventType === "img")
 	    .subscribe(event => img(event, canvas))
@@ -62,11 +56,11 @@ function img(event, canvas) {
 
     var oContext = oCanvas.getContext("2d");
     oContext.fillStyle = "orange";
-    oContext.fillRect(0, 0, 100, 100);
+    oContext.fillRect(0, 0, oCanvas.width, oCanvas.height);
 
     var oContextGrid = oCanvasGrid.getContext("2d");
     oContextGrid.fillStyle = "blue";
-    oContextGrid.fillRect(0, 0, 100, 100);
+    oContextGrid.fillRect(0, 0, oCanvas.width, oCanvas.height);
 
     hideLines(event, canvas);
 }
@@ -83,6 +77,8 @@ function makeMouseTracker(draggable) {
 	    return {eventType: "down", x : md.clientX, y : md.clientY};
 	});
 
+	down$.subscribe(event => showLines(event, canvas))
+
 	var up$ = mouseDown$.flatMap(function (md) {
 	    md.preventDefault();
 
@@ -90,6 +86,8 @@ function makeMouseTracker(draggable) {
 		return {eventType: "up", startX : md.clientX, startY : md.clientY, x : mu.clientX - md.clientX, y : mu.clientY - md.clientY}
 	    }).first(); // why do I need this first() ?  without it I get multiple events accumulating
 	});
+
+	up$.subscribe(event => hideLines(event, canvas))
 
 	var dragger$ = mouseDown$.flatMap(function (md) {
 	    md.preventDefault();
