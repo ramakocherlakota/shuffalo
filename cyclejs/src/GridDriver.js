@@ -22,25 +22,58 @@ function makeGridDriver(canvasElt) {
 	source$.filter(event => event.eventType === "hideLines")
 	    .subscribe(event => hideLines(event, canvas))
 
+	source$.filter(event => event.eventType === "img")
+	    .subscribe(event => img(event, canvas))
+
 	return mouseTracker$;
     }    
 }
 
-function drawSquare(squareProps, canvas) {
-
-}
-
-function showLines(xorProps, canvas) {
+function showLines(event, canvas) {
     console.log("show lines");
+    if (oCanvasGrid) {
+	var ctx = canvas.getContext('2d');
+	ctx.drawImage(oCanvasGrid, 0, 0);
+    }
 }
 
-function hideLines(xorProps, canvas) {
+function hideLines(event, canvas) {
     console.log("hide lines");
+    if (oCanvas) {
+	var ctx = canvas.getContext('2d');
+	ctx.drawImage(oCanvas, 0, 0);
+    }
+}
+
+// o stands for offscreen
+var oCanvas = null; // without grid lines
+var oCanvasGrid = null; // with grid lines
+
+function img(event, canvas) {
+    console.log("draw image");
+    if (!oCanvas) {
+	oCanvas = document.createElement("canvas");
+	oCanvas.width = canvas.width;
+	oCanvas.height = canvas.height;
+	oCanvasGrid = document.createElement("canvas");
+	oCanvasGrid.width = canvas.width;
+	oCanvasGrid.height = canvas.height;
+    }
+
+    var oContext = oCanvas.getContext("2d");
+    oContext.fillStyle = "orange";
+    oContext.fillRect(0, 0, 100, 100);
+
+    var oContextGrid = oCanvasGrid.getContext("2d");
+    oContextGrid.fillStyle = "blue";
+    oContextGrid.fillRect(0, 0, 100, 100);
+
+    hideLines(event, canvas);
 }
 
 function makeMouseTracker(draggable) {
 
-    return function mouseTrack() {
+    return function() {
 
 	var mouseDown$ = Rx.DOM.mousedown(draggable);
 	
