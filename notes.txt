@@ -1,4 +1,4 @@
 canvas performance tips: 
 https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas
 
-
+- it's a pain googling to find out how to track changes in a select
