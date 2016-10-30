@@ -12,9 +12,9 @@ function makeGridDriver(canvasElt) {
 	document.querySelector(canvasElt) :
 	canvasElt
 
-    let mouseTracker$ = makeMouseTracker(canvas);
-
     return function(source$) {
+        let mouseTracker$ = makeMouseTracker(canvas, source$);
+
 	source$
 	    .subscribe(event => console.log("from source: " + event.eventType));
 
@@ -26,7 +26,6 @@ function makeGridDriver(canvasElt) {
 }
 
 function showLines(event, canvas) {
-    console.log("show lines");
     if (oCanvasGrid) {
 	let ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvasGrid, 0, 0);
@@ -34,7 +33,6 @@ function showLines(event, canvas) {
 }
 
 function hideLines(event, canvas) {
-    console.log("hide lines");
     if (oCanvas) {
 	let ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvas, 0, 0);
@@ -90,6 +88,8 @@ function img(event, canvas) {
 function makeMouseTracker(draggable, source$) {
 
     return function() {
+        let showGrid$ = source$.filter(event => event.eventType === "showGrid").pluck("value")
+
 	let mouseDown$ = Rx.DOM.mousedown(draggable);
 	
 	let down$ = mouseDown$.map(function (md) {
@@ -98,7 +98,8 @@ function makeMouseTracker(draggable, source$) {
 	    return {eventType: "down", x : md.clientX, y : md.clientY};
 	});
 
-	down$.subscribe(event => showLines(event, canvas))
+	down$.withLatestFrom(showGrid$, function(x, sg) {return sg;}) // only show lines if clicked
+            .subscribe(sg => {if (sg) {showLines(event, canvas);}})
 
 	let up$ = mouseDown$.flatMap(function (md) {
 	    md.preventDefault();
