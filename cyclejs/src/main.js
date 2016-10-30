@@ -5,25 +5,25 @@ import GridDriver from './GridDriver';
 let Rx = require(`rx-dom`)
 
 function main(sources) {
-    let gridDriver = sources.GridDriver();
+    let gridDriver = sources.GridDriver(); // GridDriver returns a function
     let dragger$ = gridDriver.dragger;
 
-    let imageChooser = document.getElementById("image-chooser")
+    let imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {eventType: "img", imageFile : file}})
 
-    let imgSelect$ = Rx.Observable.fromEvent(imageChooser, "change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {eventType: "img", imageFile : file}})
+    let showGrid$ = sources.DOM.select("show-grid-cb").events("change").map(ev => ev.target.checked).startWith(true).map(value => {return {eventType: "showGrid", value}})
 
-    let gridEvent$ = dragger$.merge(imgSelect$)
+    let gridEvent$ = dragger$.merge(imgSelect$).merge(showGrid$)
 
     return {
 	GridDriver: gridEvent$
     };
 }
 
-const drivers = {
-    GridDriver: GridDriver.makeGridDriver("#canvas"),
-    DOM : CycleDOM.makeDOMDriver('#main-container')
-}
-
 window.onload = function() {
+    const drivers = {
+        GridDriver: GridDriver.makeGridDriver("#canvas"),
+        DOM : CycleDOM.makeDOMDriver('#main-container')
+    }
+
     Cycle.run(main, drivers);
 }    
