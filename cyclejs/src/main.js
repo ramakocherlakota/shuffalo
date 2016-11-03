@@ -5,7 +5,7 @@ import GridDriver from './GridDriver';
 let Rx = require(`rx-dom`)
 
 function main(sources) {
-    let gridDriver = sources.GridDriver(); // GridDriver returns a function
+    let gridDriver = sources.GridDriver;
     let dragger$ = gridDriver.dragger;
 
     let imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {eventType: "img", imageFile : file}})
