@@ -97,7 +97,7 @@ function makeMouseTracker(draggable, source$) {
 	return {eventType: "down", x : md.clientX, y : md.clientY};
     });
     
-    down$.withLatestFrom(showGrid$, function(x, sg) {return sg;}) // only show lines if clicked
+    down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
         .subscribe(sg => {if (sg) {showLines(event, canvas);}})
     
     let up$ = mouseDown$.flatMap(function (md) {
@@ -108,7 +108,8 @@ function makeMouseTracker(draggable, source$) {
 	}).first(); // why do I need this first() ?  without it I get multiple events accumulating
     });
     
-    up$.subscribe(event => hideLines(event, canvas))
+    up$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "never";}) 
+        .subscribe(sg => {if (sg) {hideLines(event, canvas);}})
     
     let dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();

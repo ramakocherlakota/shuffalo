@@ -10,7 +10,7 @@ function main(sources) {
 
     let imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {eventType: "img", imageFile : file}})
 
-    let showGrid$ = sources.DOM.select("#show-grid-cb").events("change").map(ev => ev.target.checked).startWith(true).map(v => {return {eventType: "showGrid", value: v}})
+    let showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {eventType: "showGrid", value: v}})
 
     let gridEvent$ = dragger$.merge(imgSelect$).merge(showGrid$)
 
