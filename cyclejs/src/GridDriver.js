@@ -25,14 +25,14 @@ function makeGridDriver(canvasElt) {
     }    
 }
 
-function showLines(event, canvas) {
+function showLines(canvas) {
     if (oCanvasGrid) {
 	let ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvasGrid, 0, 0);
     }
 }
 
-function hideLines(event, canvas) {
+function hideLines(canvas) {
     if (oCanvas) {
 	let ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvas, 0, 0);
@@ -88,6 +88,9 @@ function img(event, canvas) {
 function makeMouseTracker(draggable, source$) {
 
     let showGrid$ = source$.filter(event => event.eventType === "showGrid").pluck("value")
+    showGrid$.subscribe(sg => {if (sg === "always") showLines(draggable);
+                               else hideLines(draggable);});
+                                   
     
     let mouseDown$ = Rx.DOM.mousedown(draggable);
     
@@ -98,7 +101,7 @@ function makeMouseTracker(draggable, source$) {
     });
     
     down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
-        .subscribe(sg => {if (sg) {showLines(event, canvas);}})
+        .subscribe(sg => {if (sg) {showLines(draggable);}})
     
     let up$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
@@ -109,7 +112,7 @@ function makeMouseTracker(draggable, source$) {
     });
     
     up$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "never";}) 
-        .subscribe(sg => {if (sg) {hideLines(event, canvas);}})
+        .subscribe(sg => {if (sg) {hideLines(draggable);}})
     
     let dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();

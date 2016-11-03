@@ -1,6 +1,4 @@
 TODO
-- allow Always Show Grid
-  - when they change the selection should update drawing
 - unit tests
 - use browserify notes to set up images in bundle
 
