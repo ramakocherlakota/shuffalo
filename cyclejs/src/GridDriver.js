@@ -15,9 +15,6 @@ function makeGridDriver(canvasElt) {
     return function(source$) {
         let mouseTracker$ = makeMouseTracker(canvas, source$);
 
-	source$
-	    .subscribe(event => console.log("from source: " + event.eventType));
-
 	source$.filter(event => event.eventType === "img")
 	    .subscribe(event => img(event, canvas))
 
@@ -161,9 +158,11 @@ function makeMouseTracker(draggable, source$) {
 	return movesUntilDone$.merge(moveDone$)
     });
 
-    return {down : down$,
-	    up : up$,
-	    dragger : dragger$};
+    dragger$.filter(event => event.eventType === "move")
+        .subscribe(event => console.log("moved mouse (and I saw you!)"))
+
+    return {moveDone : dragger$.filter(evt => evt.eventType === "moveDone")}
+
 }
 
 module.exports = GridDriver

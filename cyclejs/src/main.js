@@ -6,16 +6,19 @@ let Rx = require(`rx-dom`)
 
 function main(sources) {
     let gridDriver = sources.GridDriver;
-    let dragger$ = gridDriver.dragger;
+    let moveDone$ = gridDriver.moveDone;
 
+    moveDone$.subscribe(evt => console.log("moveDone: " + evt.direction + " at " + evt.at + " by " + evt.by))
+
+    // TODO unhardcode the image path
     let imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {eventType: "img", imageFile : file}})
 
     let showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {eventType: "showGrid", value: v}})
 
-    let gridEvent$ = dragger$.merge(imgSelect$).merge(showGrid$)
+    let configChange$ = imgSelect$.merge(showGrid$)
 
     return {
-	GridDriver: gridEvent$
+	GridDriver: configChange$
     };
 }
 
