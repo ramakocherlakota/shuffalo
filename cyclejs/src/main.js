@@ -13,12 +13,15 @@ function main(sources) {
     // TODO unhardcode the image path
     let imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {imageFile : file}})
     let sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {size: v}})
-    let redraw$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, 
-                                              function(i, s) {
+    let flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("none").map(v => {return {flip: v}})
+
+    let redraw$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$,
+                                              function(i, s, f) {
                                                   return {
                                                       eventType :"redraw", 
                                                       size : s.size, 
-                                                      imageFile : i.imageFile
+                                                      imageFile : i.imageFile,
+                                                      flip : f.flip
                                                   }
                                               });
 

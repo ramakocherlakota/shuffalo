@@ -51,6 +51,7 @@ function redraw(event, canvas) {
     }
 
     console.log("size = " + event.size);
+    console.log("flip = " + event.flip);
 
     var img = new Image();
     img.src = event.imageFile;
