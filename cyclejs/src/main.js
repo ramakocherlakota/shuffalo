@@ -11,11 +11,18 @@ function main(sources) {
     moveDone$.subscribe(evt => console.log("moveDone: " + evt.direction + " at " + evt.at + " by " + evt.by))
 
     // TODO unhardcode the image path
-    let imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {eventType: "img", imageFile : file}})
+    let imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {imageFile : file}})
+    let size$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {size: v}})
+    let imgRedraw$ = imgSelect$.withLatestFrom(size$, function(i, s) {return {eventType :"redraw", size : s.size, imageFile : i.imageFile}})
+    let sizeRedraw$ = size$.withLatestFrom(imgSelect$, function(s, i) {return {eventType :"redraw", size : s.size, imageFile : i.imageFile}})
+    let redraw$ = imgRedraw$.merge(sizeRedraw$)
+    
 
-    let showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {eventType: "showGrid", value: v}})
+    let showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {eventType: "showGrid", gridValue: v}})
 
-    let configChange$ = imgSelect$.merge(showGrid$)
+    let configChange$ = showGrid$.merge(redraw$);
+
+    configChange$.subscribe(evt => console.log(evt));
 
     return {
 	GridDriver: configChange$

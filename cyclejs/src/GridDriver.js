@@ -15,8 +15,8 @@ function makeGridDriver(canvasElt) {
     return function(source$) {
         let mouseTracker$ = makeMouseTracker(canvas, source$);
 
-	source$.filter(event => event.eventType === "img")
-	    .subscribe(event => img(event, canvas))
+	source$.filter(event => event.eventType === "redraw")
+	    .subscribe(event => redraw(event, canvas))
 
 	return mouseTracker$;
     }    
@@ -40,7 +40,7 @@ function hideLines(canvas) {
 var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
 
-function img(event, canvas) {
+function redraw(event, canvas) {
     if (!oCanvas) {
 	oCanvas = document.createElement("canvas");
 	oCanvas.width = canvas.width;
@@ -49,6 +49,8 @@ function img(event, canvas) {
 	oCanvasGrid.width = canvas.width;
 	oCanvasGrid.height = canvas.height;
     }
+
+    console.log("size = " + event.size);
 
     var img = new Image();
     img.src = event.imageFile;
@@ -84,7 +86,7 @@ function img(event, canvas) {
 
 function makeMouseTracker(draggable, source$) {
 
-    let showGrid$ = source$.filter(event => event.eventType === "showGrid").pluck("value")
+    let showGrid$ = source$.filter(event => event.eventType === "showGrid").pluck("gridValue")
     showGrid$.subscribe(sg => {if (sg === "always") showLines(draggable);
                                else hideLines(draggable);});
                                    
