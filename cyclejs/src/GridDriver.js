@@ -27,6 +27,7 @@ function showLines(canvas) {
 	let ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvasGrid, 0, 0);
     }
+    gridShowing = true;
 }
 
 function hideLines(canvas) {
@@ -34,11 +35,13 @@ function hideLines(canvas) {
 	let ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvas, 0, 0);
     }
+    gridShowing = false;
 }
 
 // o stands for offscreen
 var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
+var gridShowing = false;
 
 function redraw(event, canvas) {
     if (!oCanvas) {
@@ -59,24 +62,30 @@ function redraw(event, canvas) {
 	var oContext = oCanvas.getContext("2d");
 	oContext.drawImage(img, 0, 0, oCanvas.width, oCanvas.height);
 
-	var ctx = canvas.getContext("2d");
-	ctx.drawImage(oCanvas, 0, 0);
-
 	var oContextGrid = oCanvasGrid.getContext("2d");
 
-	// TODO hard-coded gridding
 	oContextGrid.drawImage(img, 0, 0, oCanvas.width, oCanvas.height);
-	for (var j = 1; j<10; j++) {
+        var deltaWidth = oCanvas.width / event.size;
+        var deltaHeight = oCanvas.height / event.size;
+	for (var j = 1; j<event.size; j++) {
 	    oContextGrid.beginPath();
-	    oContextGrid.moveTo(j * 30, 0);
-	    oContextGrid.lineTo(j * 30, oCanvas.height);
+	    oContextGrid.moveTo(j * deltaWidth, 0);
+	    oContextGrid.lineTo(j * deltaWidth, oCanvas.height);
 	    oContextGrid.stroke();
 	    
 	    oContextGrid.beginPath();
-	    oContextGrid.moveTo(0, j * 40);
-	    oContextGrid.lineTo(oCanvas.width, j * 40);
+	    oContextGrid.moveTo(0, j * deltaHeight);
+	    oContextGrid.lineTo(oCanvas.width, j * deltaHeight);
 	    oContextGrid.stroke();
 	}
+
+	var ctx = canvas.getContext("2d");
+        if (gridShowing) {
+	    ctx.drawImage(oCanvasGrid, 0, 0);
+        }
+        else {
+	    ctx.drawImage(oCanvas, 0, 0);
+        }
     }
     img.onerror = function(err) {
 	// TODO do something useful
