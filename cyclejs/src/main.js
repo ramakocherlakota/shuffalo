@@ -14,25 +14,22 @@ function main(sources) {
     let imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {imageFile : file}})
     let sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {size: v}})
     let flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("none").map(v => {return {flip: v}})
+    let showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {showGrid: v}})
 
-    let redraw$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$,
-                                              function(i, s, f) {
+    let redraw$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$,
+                                              function(i, s, f, sg) {
                                                   return {
                                                       eventType :"redraw", 
                                                       size : s.size, 
                                                       imageFile : i.imageFile,
-                                                      flip : f.flip
+                                                      flip : f.flip,
+                                                      showGrid : sg.showGrid
                                                   }
                                               });
 
-    let showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {eventType: "showGrid", gridValue: v}})
-
-    let configChange$ = showGrid$.merge(redraw$);
-
-    configChange$.subscribe(evt => console.log(evt));
 
     return {
-	GridDriver: configChange$
+	GridDriver: redraw$
     };
 }
 

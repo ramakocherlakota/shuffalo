@@ -27,7 +27,6 @@ function showLines(canvas) {
 	let ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvasGrid, 0, 0);
     }
-    gridShowing = true;
 }
 
 function hideLines(canvas) {
@@ -35,13 +34,11 @@ function hideLines(canvas) {
 	let ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvas, 0, 0);
     }
-    gridShowing = false;
 }
 
 // o stands for offscreen
 var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
-var gridShowing = false;
 
 function redraw(event, canvas) {
     if (!oCanvas) {
@@ -52,9 +49,6 @@ function redraw(event, canvas) {
 	oCanvasGrid.width = canvas.width;
 	oCanvasGrid.height = canvas.height;
     }
-
-    console.log("size = " + event.size);
-    console.log("flip = " + event.flip);
 
     var img = new Image();
     img.src = event.imageFile;
@@ -80,7 +74,7 @@ function redraw(event, canvas) {
 	}
 
 	var ctx = canvas.getContext("2d");
-        if (gridShowing) {
+        if (event.showGrid == 'always') {
 	    ctx.drawImage(oCanvasGrid, 0, 0);
         }
         else {
@@ -96,10 +90,7 @@ function redraw(event, canvas) {
 
 function makeMouseTracker(draggable, source$) {
 
-    let showGrid$ = source$.filter(event => event.eventType === "showGrid").pluck("gridValue")
-    showGrid$.subscribe(sg => {if (sg === "always") showLines(draggable);
-                               else hideLines(draggable);});
-                                   
+    let showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
     
     let mouseDown$ = Rx.DOM.mousedown(draggable);
     
@@ -170,8 +161,8 @@ function makeMouseTracker(draggable, source$) {
 	return movesUntilDone$.merge(moveDone$)
     });
 
-    dragger$.filter(event => event.eventType === "move")
-        .subscribe(event => console.log("moved mouse (and I saw you!)"))
+//    dragger$.filter(event => event.eventType === "move")
+//        .subscribe(event => console.log("moved mouse (and I saw you!)"))
 
     return {moveDone : dragger$.filter(evt => evt.eventType === "moveDone")}
 
