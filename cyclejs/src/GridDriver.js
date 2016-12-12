@@ -18,8 +18,15 @@ function makeGridDriver(canvasElt) {
 	source$.filter(event => event.eventType === "redraw")
 	    .subscribe(event => redraw(event, canvas))
 
-	return mouseTracker$;
+        mouseTracker$.filter(evt => evt.eventType === "move")
+            .subscribe(event => dragMouse(event, canvas))
+
+	return mouseTracker$.filter(evt => evt.eventType === "moveDone")
     }    
+}
+
+function dragMouse(event, canvas) {
+    console.log("move : " + event.direction  + " by " + event.by + " at " + event.at);
 }
 
 function showLines(canvas) {
@@ -161,11 +168,7 @@ function makeMouseTracker(draggable, source$) {
 	return movesUntilDone$.merge(moveDone$)
     });
 
-//    dragger$.filter(event => event.eventType === "move")
-//        .subscribe(event => console.log("moved mouse (and I saw you!)"))
-
-    return {moveDone : dragger$.filter(evt => evt.eventType === "moveDone")}
-
+    return dragger$;
 }
 
 module.exports = GridDriver

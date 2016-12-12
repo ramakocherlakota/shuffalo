@@ -6,7 +6,7 @@ let Rx = require(`rx-dom`)
 
 function main(sources) {
     let gridDriver = sources.GridDriver;
-    let moveDone$ = gridDriver.moveDone;
+    let moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
 
     moveDone$.subscribe(evt => console.log("moveDone: " + evt.direction + " at " + evt.at + " by " + evt.by))
 
