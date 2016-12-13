@@ -25,8 +25,18 @@ function makeGridDriver(canvasElt) {
     }    
 }
 
+function findRowOrColumn(direction, at, sz, canvas) {
+    if (direction === 'horz') {
+        return Math.floor(at * sz / canvas.height); 
+    }
+    else {
+        return Math.floor(at * sz / canvas.width);
+    }
+}
+
 function dragMouse(event, canvas) {
-    console.log("move : " + event.direction  + " by " + event.by + " at " + event.at);
+    console.log("move : " + event.direction  + " by " + event.by + " at " + event.at + " size " + event.size);
+    console.log("row or column : " + findRowOrColumn(event.direction, event.at, event.size, canvas));
 }
 
 function showLines(canvas) {
@@ -98,6 +108,7 @@ function redraw(event, canvas) {
 function makeMouseTracker(draggable, source$) {
 
     let showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
+    let size$ = source$.filter(event => event.eventType === "redraw").pluck("size")
     
     let mouseDown$ = Rx.DOM.mousedown(draggable);
     
@@ -124,8 +135,9 @@ function makeMouseTracker(draggable, source$) {
     let dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
         
-	var mouseMove$ =  Rx.DOM.mousemove(document)
-	    .map(function (mm) {return {startX : md.clientX, startY : md.clientY, x : mm.clientX - md.clientX, y : mm.clientY - md.clientY};})
+	var mouseMove$ =  Rx.DOM.mousemove(draggable)
+//	    .map(function (mm) {return {startX : md.clientX, startY : md.clientY, x : mm.clientX - md.clientX, y : mm.clientY - md.clientY};})
+	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
 	    .filter(function(p) {return p.x != p.y;});
 	
 	var firstDirection$ = mouseMove$.map(function(p) {
@@ -147,11 +159,13 @@ function makeMouseTracker(draggable, source$) {
 	    vert : function(p) {return p.startX;}
 	};
         
-	let makeOutput = function(p, hv) {
-	    return {eventType: "move", direction : hv, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
+	let makeOutput = function(p, params) {
+            var hv = params[0];
+            var sz = params[1];
+	    return {eventType: "move", size : sz, direction : hv, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
 	}
         
-	let movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, makeOutput);
+	let movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$.withLatestFrom(size$), makeOutput);
         
 	let movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 
