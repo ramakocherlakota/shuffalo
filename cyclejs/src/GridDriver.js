@@ -35,8 +35,39 @@ function findRowOrColumn(direction, at, sz, canvas) {
 }
 
 function dragMouse(event, canvas) {
-    console.log("move : " + event.direction  + " by " + event.by + " at " + event.at + " size " + event.size);
-    console.log("row or column : " + findRowOrColumn(event.direction, event.at, event.size, canvas));
+    var sourceCanvas = (event.showGrid === 'never') ? 
+        oCanvas :
+        oCanvasGrid;
+
+    var rowOrColumn = findRowOrColumn(event.direction, event.at, event.size, canvas);
+
+    var ctx = canvas.getContext("2d");
+    if (event.direction === 'horz') {
+        var cellTop = Math.floor(rowOrColumn * canvas.height / event.size);
+        var cellHeight = Math.floor(canvas.height / event.size);
+
+        if (event.by > 0) {
+            ctx.drawImage(sourceCanvas, 
+                          0, cellTop, canvas.width - event.by, cellHeight,
+                          event.by, cellTop, canvas.width - event.by, cellHeight);
+            
+            ctx.drawImage(sourceCanvas, 
+                          canvas.width - event.by, cellTop, event.by, cellHeight,
+                          0, cellTop, event.by, cellHeight);
+        }
+        else {
+            ctx.drawImage(sourceCanvas, 
+                          0, cellTop,  - event.by, cellHeight,
+                          canvas.width + event.by, cellTop, -event.by, cellHeight);
+            
+            ctx.drawImage(sourceCanvas, 
+                          - event.by, cellTop, canvas.width + event.by, cellHeight,
+                          0, cellTop, canvas.width +event.by, cellHeight);
+        }
+
+    }
+                      
+    
 }
 
 function showLines(canvas) {
@@ -136,7 +167,6 @@ function makeMouseTracker(draggable, source$) {
 	md.preventDefault();
         
 	var mouseMove$ =  Rx.DOM.mousemove(draggable)
-//	    .map(function (mm) {return {startX : md.clientX, startY : md.clientY, x : mm.clientX - md.clientX, y : mm.clientY - md.clientY};})
 	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
 	    .filter(function(p) {return p.x != p.y;});
 	
@@ -159,13 +189,11 @@ function makeMouseTracker(draggable, source$) {
 	    vert : function(p) {return p.startX;}
 	};
         
-	let makeOutput = function(p, params) {
-            var hv = params[0];
-            var sz = params[1];
-	    return {eventType: "move", size : sz, direction : hv, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
+	let makeOutput = function(p, hv, sz, sg) {
+	    return {eventType: "move", showGrid : sg, size : sz, direction : hv, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
 	}
         
-	let movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$.withLatestFrom(size$), makeOutput);
+	let movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, makeOutput);
         
 	let movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 
