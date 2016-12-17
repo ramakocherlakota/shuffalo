@@ -66,7 +66,28 @@ function dragMouse(event, canvas) {
         }
 
     }
-                      
+    else {
+        var cellLeft = Math.floor(rowOrColumn * canvas.width / event.size);
+        var cellWidth = Math.floor(canvas.width / event.size);
+        if (event.by > 0) {
+            ctx.drawImage(sourceCanvas, 
+                          cellLeft, 0, cellWidth, canvas.height - event.by,
+                          cellLeft, event.by, cellWidth, canvas.height - event.by);
+            
+            ctx.drawImage(sourceCanvas, 
+                          cellLeft, canvas.height - event.by, cellWidth, event.by,
+                          cellLeft, 0, cellWidth, event.by);
+        }
+        else {
+            ctx.drawImage(sourceCanvas, 
+                          cellLeft, 0,  cellWidth, - event.by,
+                          cellLeft, canvas.height + event.by, cellWidth, -event.by);
+            
+            ctx.drawImage(sourceCanvas, 
+                          cellLeft, - event.by, cellWidth, canvas.height + event.by,
+                          cellLeft, 0, cellWidth, canvas.height +event.by);
+        }
+    }
     
 }
 
@@ -166,7 +187,7 @@ function makeMouseTracker(draggable, source$) {
     let dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
         
-	var mouseMove$ =  Rx.DOM.mousemove(draggable)
+	var mouseMove$ =  Rx.DOM.mousemove(document)
 	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
 	    .filter(function(p) {return p.x != p.y;});
 	
