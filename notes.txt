@@ -1,8 +1,13 @@
 TODO
+- dragging:
+  - both h and v: when you drag past a certain point you get garbage on the screen
+
 - unit tests
 - use browserify notes to set up images in bundle
 
 canvas performance tips: 
 https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas
+
+
 
 

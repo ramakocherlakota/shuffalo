@@ -41,6 +41,8 @@ function dragMouse(event, canvas) {
 
     var rowOrColumn = findRowOrColumn(event.direction, event.at, event.size, canvas);
 
+    console.log(event.direction + " by = " + event.by);
+
     var ctx = canvas.getContext("2d");
     if (event.direction === 'horz') {
         var cellTop = Math.floor(rowOrColumn * canvas.height / event.size);
@@ -69,6 +71,7 @@ function dragMouse(event, canvas) {
     else {
         var cellLeft = Math.floor(rowOrColumn * canvas.width / event.size);
         var cellWidth = Math.floor(canvas.width / event.size);
+
         if (event.by > 0) {
             ctx.drawImage(sourceCanvas, 
                           cellLeft, 0, cellWidth, canvas.height - event.by,
@@ -187,9 +190,10 @@ function makeMouseTracker(draggable, source$) {
     let dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
         
-	var mouseMove$ =  Rx.DOM.mousemove(document)
+	var mouseMove$ =  Rx.DOM.mousemove(draggable)
 	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
 	    .filter(function(p) {return p.x != p.y;});
+
 	
 	var firstDirection$ = mouseMove$.map(function(p) {
 	    if (Math.abs(p.x) > Math.abs(p.y)) {
