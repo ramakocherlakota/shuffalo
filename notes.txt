@@ -1,6 +1,7 @@
 TODO
-- dragging:
-  - both h and v: when you drag past a certain point you get garbage on the screen
+- need to handle flips in dragging
+  - move dragging to a separate file and use a strategy pattern to make it more comprehensible
+
 
 - unit tests
 - use browserify notes to set up images in bundle

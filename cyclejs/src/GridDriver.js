@@ -1,5 +1,3 @@
-// TODO get rid of tabs, use spaces
-
 let Rx = require(`rx-dom`)
 
 let GridDriver = {
@@ -41,57 +39,36 @@ function dragMouse(event, canvas) {
 
     var rowOrColumn = findRowOrColumn(event.direction, event.at, event.size, canvas);
 
-    console.log(event.direction + " by = " + event.by);
-
     var ctx = canvas.getContext("2d");
     if (event.direction === 'horz') {
         var cellTop = Math.floor(rowOrColumn * canvas.height / event.size);
         var cellHeight = Math.floor(canvas.height / event.size);
 
-        if (event.by > 0) {
-            ctx.drawImage(sourceCanvas, 
-                          0, cellTop, canvas.width - event.by, cellHeight,
-                          event.by, cellTop, canvas.width - event.by, cellHeight);
-            
-            ctx.drawImage(sourceCanvas, 
-                          canvas.width - event.by, cellTop, event.by, cellHeight,
-                          0, cellTop, event.by, cellHeight);
-        }
-        else {
-            ctx.drawImage(sourceCanvas, 
-                          0, cellTop,  - event.by, cellHeight,
-                          canvas.width + event.by, cellTop, -event.by, cellHeight);
-            
-            ctx.drawImage(sourceCanvas, 
-                          - event.by, cellTop, canvas.width + event.by, cellHeight,
-                          0, cellTop, canvas.width +event.by, cellHeight);
-        }
+        var by =  (event.by % canvas.width) + (event.by < 0 ? canvas.width : 0)
 
+        ctx.drawImage(sourceCanvas, 
+                      0, cellTop, canvas.width - by, cellHeight,
+                      by, cellTop, canvas.width - by, cellHeight);
+        
+        ctx.drawImage(sourceCanvas, 
+                      canvas.width - by, cellTop, by, cellHeight,
+                      0, cellTop, by, cellHeight);
     }
     else {
         var cellLeft = Math.floor(rowOrColumn * canvas.width / event.size);
         var cellWidth = Math.floor(canvas.width / event.size);
 
-        if (event.by > 0) {
-            ctx.drawImage(sourceCanvas, 
-                          cellLeft, 0, cellWidth, canvas.height - event.by,
-                          cellLeft, event.by, cellWidth, canvas.height - event.by);
-            
-            ctx.drawImage(sourceCanvas, 
-                          cellLeft, canvas.height - event.by, cellWidth, event.by,
-                          cellLeft, 0, cellWidth, event.by);
-        }
-        else {
-            ctx.drawImage(sourceCanvas, 
-                          cellLeft, 0,  cellWidth, - event.by,
-                          cellLeft, canvas.height + event.by, cellWidth, -event.by);
-            
-            ctx.drawImage(sourceCanvas, 
-                          cellLeft, - event.by, cellWidth, canvas.height + event.by,
-                          cellLeft, 0, cellWidth, canvas.height +event.by);
-        }
+        var by =  (event.by % canvas.height) + (event.by < 0 ? canvas.height : 0)
+        console.log("height = " + canvas.height + " event.by = " + event.by + " by=" + by)
+
+        ctx.drawImage(sourceCanvas, 
+                      cellLeft, 0, cellWidth, canvas.height - by,
+                      cellLeft, by, cellWidth, canvas.height - by);
+        
+        ctx.drawImage(sourceCanvas, 
+                      cellLeft, canvas.height - by, cellWidth, by,
+                      cellLeft, 0, cellWidth, by);
     }
-    
 }
 
 function showLines(canvas) {
@@ -190,7 +167,7 @@ function makeMouseTracker(draggable, source$) {
     let dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
         
-	var mouseMove$ =  Rx.DOM.mousemove(draggable)
+	var mouseMove$ =  Rx.DOM.mousemove(document)
 	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
 	    .filter(function(p) {return p.x != p.y;});
 
