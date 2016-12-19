@@ -40,6 +40,21 @@ function dragMouse(event, canvas) {
     var rowOrColumn = findRowOrColumn(event.direction, event.at, event.size, canvas);
 
     var ctx = canvas.getContext("2d");
+    if (event.flip > 0) {
+        dragMouseFlip(event, sourceCanvas, ctx, rowOrColumn);        
+    }
+    else {
+        dragMouseStraight(event, sourceCanvas, ctx, rowOrColumn);        
+    }
+}
+
+
+function dragMouseFlip(event, sourceCanvas, ctx, rowOrColumn) {
+    console.log("dragMouseFlip flip=" + event.flip);
+}
+
+function dragMouseStraight(event, sourceCanvas, ctx, rowOrColumn) {
+
     if (event.direction === 'horz') {
         var cellTop = Math.floor(rowOrColumn * canvas.height / event.size);
         var cellHeight = Math.floor(canvas.height / event.size);
@@ -59,7 +74,6 @@ function dragMouse(event, canvas) {
         var cellWidth = Math.floor(canvas.width / event.size);
 
         var by =  (event.by % canvas.height) + (event.by < 0 ? canvas.height : 0)
-        console.log("height = " + canvas.height + " event.by = " + event.by + " by=" + by)
 
         ctx.drawImage(sourceCanvas, 
                       cellLeft, 0, cellWidth, canvas.height - by,
@@ -141,6 +155,7 @@ function makeMouseTracker(draggable, source$) {
 
     let showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
     let size$ = source$.filter(event => event.eventType === "redraw").pluck("size")
+    let flip$ = source$.filter(event => event.eventType === "redraw").pluck("flip")
     
     let mouseDown$ = Rx.DOM.mousedown(draggable);
     
@@ -191,11 +206,11 @@ function makeMouseTracker(draggable, source$) {
 	    vert : function(p) {return p.startX;}
 	};
         
-	let makeOutput = function(p, hv, sz, sg) {
-	    return {eventType: "move", showGrid : sg, size : sz, direction : hv, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
+	let makeOutput = function(p, hv, sz, sg, fl) {
+	    return {eventType: "move", showGrid : sg, size : sz, direction : hv, flip : fl, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
 	}
         
-	let movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, makeOutput);
+	let movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, flip$, makeOutput);
         
 	let movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 
