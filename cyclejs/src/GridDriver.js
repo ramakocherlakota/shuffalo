@@ -32,6 +32,15 @@ function findRowOrColumn(direction, at, sz, canvas) {
     }
 }
 
+function findByCells(direction, by, sz, canvas) {
+    if (direction === 'horz') {
+        return Math.round(by * sz / canvas.width); 
+    }
+    else {
+        return Math.round(by * sz / canvas.height);
+    }
+}
+
 function dragMouse(event, canvas) {
     var sourceCanvas = (event.showGrid === 'never') ? 
         oCanvas :
@@ -151,13 +160,13 @@ function redraw(event, canvas) {
 
 }
 
-function makeMouseTracker(draggable, source$) {
+function makeMouseTracker(canvas, source$) {
 
     let showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
     let size$ = source$.filter(event => event.eventType === "redraw").pluck("size")
     let flip$ = source$.filter(event => event.eventType === "redraw").pluck("flip")
     
-    let mouseDown$ = Rx.DOM.mousedown(draggable);
+    let mouseDown$ = Rx.DOM.mousedown(canvas);
     
     let down$ = mouseDown$.map(function (md) {
 	md.preventDefault();
@@ -166,7 +175,7 @@ function makeMouseTracker(draggable, source$) {
     });
     
     down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
-        .subscribe(sg => {if (sg) {showLines(draggable);}})
+        .subscribe(sg => {if (sg) {showLines(canvas);}})
     
     let up$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
@@ -177,7 +186,7 @@ function makeMouseTracker(draggable, source$) {
     });
     
     up$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "never";}) 
-        .subscribe(sg => {if (sg) {hideLines(draggable);}})
+        .subscribe(sg => {if (sg) {hideLines(canvas);}})
     
     let dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
@@ -218,8 +227,8 @@ function makeMouseTracker(draggable, source$) {
 	    return {
 		eventType : "moveDone",
 		direction : p.direction,
-		by : p.by,
-		at : p.at
+		by : findByCells(p.direction, p.by, p.size, canvas),
+		at : findRowOrColumn(p.direction, p.at, p.size, canvas)
 	    };
 	});
 

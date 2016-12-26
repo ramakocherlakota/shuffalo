@@ -1,6 +1,6 @@
 TODO
 - need to handle flips in dragging
-  - move dragging to a separate file and use a strategy pattern to make it more comprehensible
+  - double the width and height of the offscreen canvases and add flips as necessary
 
 
 - unit tests
