@@ -1,17 +1,17 @@
-let Rx = require(`rx-dom`)
+const Rx = require(`rx-dom`)
 
-let GridDriver = {
+const GridDriver = {
     makeGridDriver
 }
 
 function makeGridDriver(canvasElt) {
 
-    let canvas = typeof canvasElt === `string` ?
+    const canvas = typeof canvasElt === `string` ?
 	document.querySelector(canvasElt) :
 	canvasElt
 
     return function(source$) {
-        let mouseTracker$ = makeMouseTracker(canvas, source$);
+        const mouseTracker$ = makeMouseTracker(canvas, source$);
 
 	source$.filter(event => event.eventType === "redraw")
 	    .subscribe(event => redraw(event, canvas))
@@ -96,14 +96,14 @@ function dragMouseStraight(event, sourceCanvas, ctx, rowOrColumn) {
 
 function showLines(canvas) {
     if (oCanvasGrid) {
-	let ctx = canvas.getContext('2d');
+	const ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvasGrid, 0, 0);
     }
 }
 
 function hideLines(canvas) {
     if (oCanvas) {
-	let ctx = canvas.getContext('2d');
+	const ctx = canvas.getContext('2d');
 	ctx.drawImage(oCanvas, 0, 0);
     }
 }
@@ -162,13 +162,13 @@ function redraw(event, canvas) {
 
 function makeMouseTracker(canvas, source$) {
 
-    let showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
-    let size$ = source$.filter(event => event.eventType === "redraw").pluck("size")
-    let flip$ = source$.filter(event => event.eventType === "redraw").pluck("flip")
+    const showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
+    const size$ = source$.filter(event => event.eventType === "redraw").pluck("size")
+    const flip$ = source$.filter(event => event.eventType === "redraw").pluck("flip")
     
-    let mouseDown$ = Rx.DOM.mousedown(canvas);
+    const mouseDown$ = Rx.DOM.mousedown(canvas);
     
-    let down$ = mouseDown$.map(function (md) {
+    const down$ = mouseDown$.map(function (md) {
 	md.preventDefault();
 	
 	return {eventType: "down", x : md.clientX, y : md.clientY};
@@ -177,7 +177,7 @@ function makeMouseTracker(canvas, source$) {
     down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
         .subscribe(sg => {if (sg) {showLines(canvas);}})
     
-    let up$ = mouseDown$.flatMap(function (md) {
+    const up$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
         
 	return Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)).map(function(mu) {
@@ -188,7 +188,7 @@ function makeMouseTracker(canvas, source$) {
     up$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "never";}) 
         .subscribe(sg => {if (sg) {hideLines(canvas);}})
     
-    let dragger$ = mouseDown$.flatMap(function (md) {
+    const dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
         
 	var mouseMove$ =  Rx.DOM.mousemove(document)
@@ -205,30 +205,35 @@ function makeMouseTracker(canvas, source$) {
 	    }})
 	    .first();
         
-	let offsetFunctionMap = {
+	const offsetFunctionMap = {
 	    horz : function(p) {return p.x;},
 	    vert : function(p) {return p.y;}
 	};
         
-	let startFunctionMap = {
+	const startFunctionMap = {
 	    horz : function(p) {return p.startY;},
 	    vert : function(p) {return p.startX;}
 	};
         
-	let makeOutput = function(p, hv, sz, sg, fl) {
+	const makeOutput = function(p, hv, sz, sg, fl) {
 	    return {eventType: "move", showGrid : sg, size : sz, direction : hv, flip : fl, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
 	}
         
-	let movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, flip$, makeOutput);
+	const movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, flip$, makeOutput);
         
-	let movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
+	const movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 
-	let moveDone$ = movesUntilDone$.startWith({by : 0}).last().map(function(p) {
+//        movesUntilDone$.subscribe(event => {
+//            console.log("dragging mouse by " + event.by);
+//        });
+
+	const moveDone$ = movesUntilDone$.startWith({by : 0}).last().map(function(p) {
 	    return {
 		eventType : "moveDone",
 		direction : p.direction,
 		by : findByCells(p.direction, p.by, p.size, canvas),
-		at : findRowOrColumn(p.direction, p.at, p.size, canvas)
+		at : findRowOrColumn(p.direction, p.at, p.size, canvas),
+                size : p.size
 	    };
 	});
 

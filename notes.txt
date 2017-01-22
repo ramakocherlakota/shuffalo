@@ -1,4 +1,6 @@
 TODO
+- why does it snap back to initial position on mouse up now?
+- mouse up should save the new state
 - need to handle flips in dragging
   - double the width and height of the offscreen canvases and add flips as necessary
 
