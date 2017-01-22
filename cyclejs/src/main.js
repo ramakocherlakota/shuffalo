@@ -15,34 +15,44 @@ function startingSquares(n) {
     return array;
 }
     
-function moveFunction(direction, at, by) {
+function modPos(arg, size) {
+    if (!size || size <= 0) {
+        console.log("must provide a positive second argument to modPos!")
+        return arg;
+    }
+    if (arg < 0) {
+        arg += Math.abs(Math.floor(arg / size)) * size
+    }
+    return arg % size;
+}
+
+function moveFunction(direction, at, by, size) {
     return function(squares, i, j) {
         if (direction === 'horz') {
             if (i == at) {
-                return squares[i][j-by]
+                return squares[i][modPos(j-by, size)]
             }
         }
         else {
             if (j == at) {
-                return squares[i-by][j]
+                return squares[modPos(i-by, size)][j]
             }
         }
         return squares[i][j]
     }
 }
 
+function copySquare(square) {
+    return {row : square.row, col: square.col}
+}
 
 function actOn(squares, move) {
-    const direction = move.direction
-    const by = move.by
-    const at = move.at
-    const size = move.size
-    const moveFn = moveFunction(direction, at, by)
+    let moveFn = moveFunction(move.direction, move.at, move.by, move.size)
     var newSquares = new Array();
-    for (let i=0; i<size; i++) {
+    for (let i=0; i<move.size; i++) {
         newSquares[i] = new Array();
-        for (let j=0; j<size; j++) {
-            newSquares[i][j] = moveFn(squares, i, j)
+        for (let j=0; j<move.size; j++) {
+            newSquares[i][j] = copySquare(moveFn(squares, i, j))
         }
     }
     return newSquares
