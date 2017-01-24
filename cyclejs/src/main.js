@@ -58,6 +58,21 @@ function actOn(squares, move) {
     return newSquares
 }
 
+function dumpSquare(square) {
+    return "(" + square.row + ", " + square.col + ")"
+}
+
+function dumpSquares(squares) {
+    for (let i=0; i<squares.length; i++) {
+        var line = "";
+        for (let j=0; j<squares.length; j++) {
+            line += dumpSquare(squares[i][j]) + "; "
+        }
+        console.log(line)
+    }
+    console.log("")
+}
+
 function main(sources) {
     const gridDriver = sources.GridDriver;
     const moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
@@ -65,13 +80,7 @@ function main(sources) {
 //    moveDone$.subscribe(evt => console.log("moveDone: " + evt.direction + " at " + evt.at + " by " + evt.by))
 
     const starting = startingSquares(3);
-    const squares$ = moveDone$.scan(actOn, starting);
-
-    squares$.subscribe(sq => {
-        console.log(sq[0])
-        console.log(sq[1])
-        console.log(sq[2])
-    })
+    const squares$ = moveDone$.scan(actOn, starting).startWith(starting)
 
     // TODO unhardcode the image path
     const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {imageFile : file}})
@@ -79,14 +88,15 @@ function main(sources) {
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {flip: v}})
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {showGrid: v}})
 
-    const redraw$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$,
-                                              function(i, s, f, sg) {
+    const redraw$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$,
+                                              function(i, s, f, sg, squares) {
                                                   return {
                                                       eventType :"redraw", 
                                                       size : s.size, 
                                                       imageFile : i.imageFile,
                                                       flip : f.flip,
-                                                      showGrid : sg.showGrid
+                                                      showGrid : sg.showGrid,
+                                                      squares : squares
                                                   }
                                               });
 
