@@ -1,5 +1,7 @@
 import Cycle from '@cycle/core';
 import CycleDOM from '@cycle/dom';
+import CycleStorage from '@cycle/storage';
+
 import GridDriver from './GridDriver';
 
 const Rx = require(`rx-dom`)
@@ -83,32 +85,37 @@ function main(sources) {
     const squares$ = moveDone$.scan(actOn, starting).startWith(starting)
 
     // TODO unhardcode the image path
-    const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {imageFile : file}})
-    const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {size: v}})
-    const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {flip: v}})
-    const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {showGrid: v}})
+
+    const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {key : "img", value : file}})
+    const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {key : "size", value : v}})
+    const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
+    const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
 
     const redraw$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$,
                                               function(i, s, f, sg, squares) {
                                                   return {
                                                       eventType :"redraw", 
-                                                      size : s.size, 
-                                                      imageFile : i.imageFile,
-                                                      flip : f.flip,
-                                                      showGrid : sg.showGrid,
+                                                      size : s.value, 
+                                                      imageFile : i.value,
+                                                      flip : f.value,
+                                                      showGrid : sg.value,
                                                       squares : squares
                                                   }
                                               });
 
+    const storage$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
+
     return {
-	GridDriver: redraw$
+	GridDriver : redraw$,
+//        Storage : storage$
     };
 }
 
 window.onload = function() {
     const drivers = {
-        GridDriver: GridDriver.makeGridDriver("#canvas"),
-        DOM : CycleDOM.makeDOMDriver('#main-container')
+        GridDriver : GridDriver.makeGridDriver("#canvas"),
+        DOM : CycleDOM.makeDOMDriver('#main-container'),
+//        Storage : CycleStorage
     }
 
     Cycle.run(main, drivers);

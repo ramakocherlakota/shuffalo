@@ -7,8 +7,9 @@
   "dependencies": {
     "@cycle/core": "6.0.0-rc2",
     "@cycle/dom": "8.0.0-rc2",
+    "@cycle/storage": "^3.0.0",
     "rx": "4.0.6",
-    "rx-dom":"7.0.3"
+    "rx-dom": "7.0.3"
   },
   "devDependencies": {
     "browserify": "11.0.1",
