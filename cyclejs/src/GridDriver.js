@@ -19,6 +19,9 @@ function makeGridDriver(canvasElt) {
         mouseTracker$.filter(evt => evt.eventType === "move")
             .subscribe(event => dragMouse(event, canvas))
 
+        mouseTracker$.filter(evt => evt.eventType === "finishDrag")
+            .subscribe(event => finishDrag(event, canvas))
+
 	return mouseTracker$.filter(evt => evt.eventType === "moveDone")
     }    
 }
@@ -33,12 +36,33 @@ function findRowOrColumn(direction, at, sz, canvas) {
 }
 
 function findByCells(direction, by, sz, canvas) {
+    return Math.round(by * sz / canvasWidthOrHeight(direction, canvas)); 
+}
+
+function canvasWidthOrHeight(direction, canvas) {
     if (direction === 'horz') {
-        return Math.round(by * sz / canvas.width); 
+        return canvas.width;
     }
     else {
-        return Math.round(by * sz / canvas.height);
+        return canvas.height;
     }
+}
+
+function finishDrag(p, canvas) {
+    var byCells = findByCells(p.direction, p.by, p.size, canvas);
+    var delta = byCells * canvasWidthOrHeight(p.direction, canvas) / p.size  - p.by;
+
+    // let's have it slide into place in 50 ms
+    Rx.Observable.interval(10).take(6)
+        .forEach(n => {
+            dragMouse({showGrid : p.showGrid,
+                       direction : p.direction,
+                       at : p.at,
+                       size : p.size,
+                       flip : p.flip,
+                       by : p.by + delta * n / 5},
+                      canvas)})
+    
 }
 
 function dragMouse(event, canvas) {
@@ -113,6 +137,7 @@ var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
 
 function redraw(event, canvas) {
+    console.log("redrawing")
     if (!oCanvas) {
 	oCanvas = document.createElement("canvas");
 	oCanvas.width = canvas.width;
@@ -235,22 +260,30 @@ function makeMouseTracker(canvas, source$) {
         
 	const movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 
-//        movesUntilDone$.subscribe(event => {
-//            console.log("dragging mouse by " + event.by);
-//        });
-
-	const moveDone$ = movesUntilDone$.startWith({by : 0}).last().map(function(p) {
+	const finishDrag$ = movesUntilDone$.startWith({by : 0}).last().map(function(p) {
 	    return {
-		eventType : "moveDone",
-		direction : p.direction,
-		by : findByCells(p.direction, p.by, p.size, canvas),
-		at : findRowOrColumn(p.direction, p.at, p.size, canvas),
-                size : p.size
+                eventType : "finishDrag",
+                direction : p.direction,
+                by : p.by,
+                at : p.at,
+                size : p.size,
+                flip : p.flip,
+                showGrid : p.showGrid
 	    };
 	});
 
+	const moveDone$ = movesUntilDone$.startWith({by : 0}).last().map(function(p) {
+            return {
+                eventType : "moveDone",
+                direction : p.direction,
+                by : findByCells(p.direction, p.by, p.size, canvas),
+                at : findRowOrColumn(p.direction, p.at, p.size, canvas),
+                size : p.size
+            };
+	});
 
-	return movesUntilDone$.merge(moveDone$)
+
+	return movesUntilDone$.merge(finishDrag$).delay(50).merge(moveDone$);
     });
 
     return dragger$;
