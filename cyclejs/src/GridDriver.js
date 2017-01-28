@@ -164,13 +164,12 @@ function redraw(event, canvas) {
         for (var i=0; i<event.size; i++) {
             for (var j=0; j<event.size; j++) {
                 let square = event.squares[i][j];
-                // console.log("at (" + i + ", " + j + "), square = (" + square.row + ", " + square.col + ")")
                 oContext.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight);
                 oContextGrid.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight);
             }
         }
 
-	for (var j = 1; j<event.size; j++) {
+	for (var j = 0; j<=event.size; j++) {
 	    oContextGrid.beginPath();
 	    oContextGrid.moveTo(j * deltaWidth, 0);
 	    oContextGrid.lineTo(j * deltaWidth, oCanvas.height);
@@ -213,17 +212,6 @@ function makeMouseTracker(canvas, source$) {
     
     down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
         .subscribe(sg => {if (sg) {showLines(canvas);}})
-    
-//    const up$ = mouseDown$.flatMap(function (md) {
-//	md.preventDefault();
-//        
-//	return Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)).map(function(mu) {
-//	    return {eventType: "up", startX : md.clientX, startY : md.clientY, x : mu.clientX - md.clientX, y : mu.clientY - md.clientY}
-//	}).first(); // why do I need this first() ?  without it I get multiple events accumulating
-//    });
-//    
-//    up$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "never";}) 
-//        .subscribe(sg => {if (sg) {hideLines(canvas);}})
     
     const dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
@@ -272,18 +260,20 @@ function makeMouseTracker(canvas, source$) {
 	    };
 	});
 
-	const moveDone$ = movesUntilDone$.startWith({by : 0}).last().map(function(p) {
-            return {
-                eventType : "moveDone",
-                direction : p.direction,
-                by : findByCells(p.direction, p.by, p.size, canvas),
-                at : findRowOrColumn(p.direction, p.at, p.size, canvas),
-                size : p.size
-            };
-	});
+	const moveDone$ = movesUntilDone$.startWith({by : 0, at : 0})
+            .last()
+            .map(function(p) {
+                return {
+                    eventType : "moveDone",
+                    direction : p.direction,
+                    by : findByCells(p.direction, p.by, p.size, canvas),
+                    at : findRowOrColumn(p.direction, p.at, p.size, canvas),
+                    size : p.size
+                };
+	    })
 
 
-	return movesUntilDone$.merge(finishDrag$).merge(moveDone$.delay(slidingTimeMs));
+	return movesUntilDone$.merge(finishDrag$).merge(moveDone$.delay(slidingTimeMs))
     });
 
     return dragger$;

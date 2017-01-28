@@ -35,7 +35,7 @@ function moveFunction(direction, at, by, size) {
                 return squares[i][modPos(j-by, size)]
             }
         }
-        else {
+        else if (direction === 'vert') {
             if (j == at) {
                 return squares[modPos(i-by, size)][j]
             }
@@ -49,6 +49,10 @@ function copySquare(square) {
 }
 
 function actOn(squares, move) {
+    if (!move.direction) {
+        return squares;
+    }
+
     let moveFn = moveFunction(move.direction, move.at, move.by, move.size)
     var newSquares = new Array();
     for (let i=0; i<move.size; i++) {
@@ -79,11 +83,12 @@ function main(sources) {
     const gridDriver = sources.GridDriver;
     const moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
 
-//    moveDone$.subscribe(evt => console.log("moveDone: " + evt.direction + " at " + evt.at + " by " + evt.by))
 
+    // TODO unhardcode puzzle size
     const starting = startingSquares(3);
     const squares$ = moveDone$.scan(actOn, starting).startWith(starting)
-
+    moveDone$.subscribe(evt => console.log("moveDone: " + evt.direction + " at " + evt.at + " by " + evt.by))
+    squares$.subscribe(dumpSquares)
     // TODO unhardcode the image path
 
     const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {key : "img", value : file}})
