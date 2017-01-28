@@ -64,7 +64,6 @@ function finishDrag(p, canvas) {
                        flip : p.flip,
                        by : p.by + delta * n / slidingFrames},
                       canvas)})
-    
 }
 
 function dragMouse(event, canvas) {
@@ -215,16 +214,16 @@ function makeMouseTracker(canvas, source$) {
     down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
         .subscribe(sg => {if (sg) {showLines(canvas);}})
     
-    const up$ = mouseDown$.flatMap(function (md) {
-	md.preventDefault();
-        
-	return Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)).map(function(mu) {
-	    return {eventType: "up", startX : md.clientX, startY : md.clientY, x : mu.clientX - md.clientX, y : mu.clientY - md.clientY}
-	}).first(); // why do I need this first() ?  without it I get multiple events accumulating
-    });
-    
-    up$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "never";}) 
-        .subscribe(sg => {if (sg) {hideLines(canvas);}})
+//    const up$ = mouseDown$.flatMap(function (md) {
+//	md.preventDefault();
+//        
+//	return Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)).map(function(mu) {
+//	    return {eventType: "up", startX : md.clientX, startY : md.clientY, x : mu.clientX - md.clientX, y : mu.clientY - md.clientY}
+//	}).first(); // why do I need this first() ?  without it I get multiple events accumulating
+//    });
+//    
+//    up$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "never";}) 
+//        .subscribe(sg => {if (sg) {hideLines(canvas);}})
     
     const dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
