@@ -4,6 +4,21 @@ const GridDriver = {
     makeGridDriver
 }
 
+function dumpSquare(square) {
+    return "(" + square.row + ", " + square.col + ")"
+}
+
+function dumpSquares(squares) {
+    for (let i=0; i<squares.length; i++) {
+        var line = "";
+        for (let j=0; j<squares.length; j++) {
+            line += dumpSquare(squares[i][j]) + "; "
+        }
+        console.log(line)
+    }
+    console.log("")
+}
+
 function makeGridDriver(canvasElt) {
 
     const canvas = typeof canvasElt === `string` ?
@@ -159,11 +174,16 @@ function redraw(event, canvas) {
 	var oContext = oCanvas.getContext("2d");
 	var oContextGrid = oCanvasGrid.getContext("2d");
 
+        console.log("in img.onload")
+        dumpSquares(event.squares)
+
         // this is where we have to loop over the squares...
 	// oContext.drawImage(img, 0, 0, oCanvas.width, oCanvas.height);
         for (var i=0; i<event.size; i++) {
             for (var j=0; j<event.size; j++) {
+//                console.log("i=" + i + ", j=" + j)
                 let square = event.squares[i][j];
+//                console.log("row=" + square.row + ", col=" + square.col)
                 oContext.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight);
                 oContextGrid.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight);
             }

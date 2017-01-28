@@ -1,9 +1,7 @@
 TODO
+- does not handle change in size
 - port over to xstream so that the storage library will work
   - https://github.com/staltz/xstream/wiki/Migrating-from-RxJS
-- mouse up should save the new state
-- mouse up should also have a smooth animation to the new stat
-  - use flatmap to create a series of observables that can each drive an invocation of dragMouse?
 - need to handle flips in dragging
   - double the width and height of the offscreen canvases and add flips as necessary
 

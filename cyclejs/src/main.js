@@ -84,29 +84,33 @@ function main(sources) {
     const moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
 
 
-    // TODO unhardcode puzzle size
-    const starting = startingSquares(3);
-    const squares$ = moveDone$.scan(actOn, starting).startWith(starting)
-    moveDone$.subscribe(evt => console.log("moveDone: " + evt.direction + " at " + evt.at + " by " + evt.by))
-    squares$.subscribe(dumpSquares)
     // TODO unhardcode the image path
 
     const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {key : "img", value : file}})
     const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {key : "size", value : v}})
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
+    sizeSelect$.subscribe(console.log)
 
-    const redraw$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$,
-                                              function(i, s, f, sg, squares) {
-                                                  return {
-                                                      eventType :"redraw", 
-                                                      size : s.value, 
-                                                      imageFile : i.value,
-                                                      flip : f.value,
-                                                      showGrid : sg.value,
-                                                      squares : squares
-                                                  }
-                                              });
+    // TODO unhardcode puzzle size - load it from storage, also subscribe to sizeSelect$
+    const starting3 = startingSquares(3)
+    const starting$ = sizeSelect$.pluck("value").map(startingSquares).startWith(starting3);
+//    starting$.subscribe(dumpSquares)
+
+    const squares$ = starting$.flatMap(s => moveDone$.scan(actOn, s).startWith(s))
+    squares$.subscribe(dumpSquares)
+
+    const redraw$ = Rx.Observable.combineLatest(imgSelect$, flipSelect$, showGrid$, squares$,
+                                                function(i, f, sg, squares) {
+                                                    return {
+                                                        eventType :"redraw", 
+                                                        size : squares.length,
+                                                        imageFile : i.value,
+                                                        flip : f.value,
+                                                        showGrid : sg.value,
+                                                        squares : squares
+                                                    }
+                                                });
 
     const storage$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
 
