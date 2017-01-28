@@ -97,7 +97,7 @@ function main(sources) {
     const starting$ = sizeSelect$.pluck("value").map(startingSquares).startWith(starting3);
 //    starting$.subscribe(dumpSquares)
 
-    const squares$ = starting$.flatMap(s => moveDone$.scan(actOn, s).startWith(s))
+    const squares$ = starting$.flatMap(s => moveDone$.scan(actOn, s)
     squares$.subscribe(dumpSquares)
 
     const redraw$ = Rx.Observable.combineLatest(imgSelect$, flipSelect$, showGrid$, squares$,
