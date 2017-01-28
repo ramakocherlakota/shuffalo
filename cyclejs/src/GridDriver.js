@@ -48,19 +48,21 @@ function canvasWidthOrHeight(direction, canvas) {
     }
 }
 
+const slidingTimeMs = 100
+const slidingFrames = 10
+
 function finishDrag(p, canvas) {
     var byCells = findByCells(p.direction, p.by, p.size, canvas);
     var delta = byCells * canvasWidthOrHeight(p.direction, canvas) / p.size  - p.by;
 
-    // let's have it slide into place in 50 ms
-    Rx.Observable.interval(10).take(6)
+    Rx.Observable.interval(slidingTimeMs / slidingFrames).take(slidingFrames)
         .forEach(n => {
             dragMouse({showGrid : p.showGrid,
                        direction : p.direction,
                        at : p.at,
                        size : p.size,
                        flip : p.flip,
-                       by : p.by + delta * n / 5},
+                       by : p.by + delta * n / slidingFrames},
                       canvas)})
     
 }
@@ -137,7 +139,6 @@ var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
 
 function redraw(event, canvas) {
-    console.log("redrawing")
     if (!oCanvas) {
 	oCanvas = document.createElement("canvas");
 	oCanvas.width = canvas.width;
@@ -283,7 +284,7 @@ function makeMouseTracker(canvas, source$) {
 	});
 
 
-	return movesUntilDone$.merge(finishDrag$).delay(50).merge(moveDone$);
+	return movesUntilDone$.merge(finishDrag$).merge(moveDone$.delay(slidingTimeMs));
     });
 
     return dragger$;
