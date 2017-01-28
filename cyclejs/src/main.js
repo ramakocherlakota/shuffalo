@@ -53,6 +53,10 @@ function actOn(squares, move) {
         return squares;
     }
 
+    if (move.size != squares.length) {
+        return startingSquares(move.size);
+    }
+
     let moveFn = moveFunction(move.direction, move.at, move.by, move.size)
     var newSquares = new Array();
     for (let i=0; i<move.size; i++) {
@@ -90,15 +94,11 @@ function main(sources) {
     const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {key : "size", value : v}})
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
-    sizeSelect$.subscribe(console.log)
 
-    // TODO unhardcode puzzle size - load it from storage, also subscribe to sizeSelect$
     const starting3 = startingSquares(3)
     const starting$ = sizeSelect$.pluck("value").map(startingSquares).startWith(starting3);
-//    starting$.subscribe(dumpSquares)
 
-    const squares$ = starting$.flatMap(s => moveDone$.scan(actOn, s)
-    squares$.subscribe(dumpSquares)
+    const squares$ = starting$.flatMap(s => moveDone$.scan(actOn, s).startWith(s))
 
     const redraw$ = Rx.Observable.combineLatest(imgSelect$, flipSelect$, showGrid$, squares$,
                                                 function(i, f, sg, squares) {
