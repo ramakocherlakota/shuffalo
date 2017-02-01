@@ -6,15 +6,15 @@ import GridDriver from './GridDriver';
 
 const Rx = require(`rx-dom`)
 
-function startingSquares(n) {
+function startingSquares(n, hflip, vflip) {
     var array = new Array();
     for (var i=0; i<n; i++) {
         array[i] = new Array();
         for (var j=0; j<n; j++) {
-            array[i][j] = {row : i, col : j};
+            array[i][j] = {row : i, col : j, hflip : false, vflip : false};
         }
     }
-    return array;
+    return {cells : array, hflip : hflip, vflip : vflip};
 }
     
 function modPos(arg, size) {
@@ -44,8 +44,8 @@ function moveFunction(direction, at, by, size) {
     }
 }
 
-function copySquare(square) {
-    return {row : square.row, col: square.col}
+function copyCell(square) {
+    return {row : square.row, col: square.col, hflip : square.hflip, vflip : square.vflip}
 }
 
 function actOn(squares, move) {
@@ -53,35 +53,35 @@ function actOn(squares, move) {
         return squares;
     }
 
-    if (move.size != squares.length) {
+    if (move.size != squares.cells.length) {
         return startingSquares(move.size);
     }
 
     let moveFn = moveFunction(move.direction, move.at, move.by, move.size)
-    var newSquares = new Array();
+    var newCells = new Array();
     for (let i=0; i<move.size; i++) {
-        newSquares[i] = new Array();
+        newCells[i] = new Array();
         for (let j=0; j<move.size; j++) {
-            newSquares[i][j] = copySquare(moveFn(squares, i, j))
+            newCells[i][j] = copyCell(moveFn(squares.cells, i, j))
         }
     }
-    return newSquares
+    return {cells : newCells, hflip : squares.hflip, vflip : squares.vflip}
 }
 
-function dumpSquare(square) {
-    return "(" + square.row + ", " + square.col + ")"
-}
-
-function dumpSquares(squares) {
-    for (let i=0; i<squares.length; i++) {
-        var line = "";
-        for (let j=0; j<squares.length; j++) {
-            line += dumpSquare(squares[i][j]) + "; "
-        }
-        console.log(line)
-    }
-    console.log("")
-}
+//function dumpSquare(square) {
+//    return "(" + square.row + ", " + square.col + ")"
+//}
+//
+//function dumpSquares(squares) {
+//    for (let i=0; i<squares.length; i++) {
+//        var line = "";
+//        for (let j=0; j<squares.length; j++) {
+//            line += dumpSquare(squares[i][j]) + "; "
+//        }
+//        console.log(line)
+//    }
+//    console.log("")
+//}
 
 function main(sources) {
     const gridDriver = sources.GridDriver;
@@ -95,18 +95,21 @@ function main(sources) {
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
 
-    const starting3 = startingSquares(3)
-    const starting$ = sizeSelect$.pluck("value").map(startingSquares).startWith(starting3);
+    const starting3 = startingSquares(3, false, false)
+    const starting$ = Rx.Observable.combineLatest(sizeSelect$, flipSelect$,
+                                                  function(s, f) {
+                                                      return startingSquares(s.value, f.value > 0, f.value > 1);
+                                                  }).startWith(starting3);
 
     const squares$ = starting$.flatMap(s => moveDone$.scan(actOn, s).startWith(s))
 
-    const redraw$ = Rx.Observable.combineLatest(imgSelect$, flipSelect$, showGrid$, squares$,
-                                                function(i, f, sg, squares) {
+    const redraw$ = Rx.Observable.combineLatest(imgSelect$, showGrid$, squares$,
+                                                function(i, sg, squares) {
                                                     return {
                                                         eventType :"redraw", 
-                                                        size : squares.length,
+                                                        size : squares.cells.length,
                                                         imageFile : i.value,
-                                                        flip : f.value,
+                                                        flip : (squares.hflip ? 1 : 0) + (squares.vflip ? 1 : 0),
                                                         showGrid : sg.value,
                                                         squares : squares
                                                     }
