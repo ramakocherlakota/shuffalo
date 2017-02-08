@@ -91,20 +91,6 @@ function dragMouse(event, canvas) {
     var rowOrColumn = findRowOrColumn(event.direction, event.at, event.size, canvas);
 
     var ctx = canvas.getContext("2d");
-    if (event.flip > 0) {
-        dragMouseFlip(event, sourceCanvas, ctx, rowOrColumn);        
-    }
-    else {
-        dragMouseStraight(event, sourceCanvas, ctx, rowOrColumn);        
-    }
-}
-
-
-function dragMouseFlip(event, sourceCanvas, ctx, rowOrColumn) {
-    console.log("dragMouseFlip flip=" + event.flip);
-}
-
-function dragMouseStraight(event, sourceCanvas, ctx, rowOrColumn) {
 
     if (event.direction === 'horz') {
         var cellTop = Math.floor(rowOrColumn * canvas.height / event.size);
@@ -113,8 +99,8 @@ function dragMouseStraight(event, sourceCanvas, ctx, rowOrColumn) {
         var by =  (event.by % canvas.width) + (event.by < 0 ? canvas.width : 0)
 
         ctx.drawImage(sourceCanvas, 
-                      0, cellTop, canvas.width - by, cellHeight,
-                      by, cellTop, canvas.width - by, cellHeight);
+                      0, cellTop, sourceCanvas.width - by, cellHeight,
+                      by, cellTop, sourceCanvas.width - by, cellHeight);
         
         ctx.drawImage(sourceCanvas, 
                       canvas.width - by, cellTop, by, cellHeight,
@@ -127,11 +113,11 @@ function dragMouseStraight(event, sourceCanvas, ctx, rowOrColumn) {
         var by =  (event.by % canvas.height) + (event.by < 0 ? canvas.height : 0)
 
         ctx.drawImage(sourceCanvas, 
-                      cellLeft, 0, cellWidth, canvas.height - by,
-                      cellLeft, by, cellWidth, canvas.height - by);
+                      cellLeft, 0, cellWidth, sourceCanvas.height - by,
+                      cellLeft, by, cellWidth, sourceCanvas.height - by);
         
         ctx.drawImage(sourceCanvas, 
-                      cellLeft, canvas.height - by, cellWidth, by,
+                      cellLeft, sourceCanvas.height - by, cellWidth, by,
                       cellLeft, 0, cellWidth, by);
     }
 }
@@ -156,20 +142,23 @@ var oCanvasGrid = null; // with grid lines
 
 function redraw(event, canvas) {
 
+    let canvasWidth = canvas.width;
+    let canvasHeight = canvas.height;
+
     if (!oCanvas) {
 	oCanvas = document.createElement("canvas");
-	oCanvas.width = canvas.width;
-	oCanvas.height = canvas.height;
+	oCanvas.width = canvasWidth * 2;
+	oCanvas.height = canvasHeight * 2;
 	oCanvasGrid = document.createElement("canvas");
-	oCanvasGrid.width = canvas.width;
-	oCanvasGrid.height = canvas.height;
+	oCanvasGrid.width = canvasWidth * 2;
+	oCanvasGrid.height = canvasHeight * 2;
     }
 
     var img = new Image();
     img.src = event.imageFile;
     img.onload = function() {
-        var deltaWidth = oCanvas.width / event.size;
-        var deltaHeight = oCanvas.height / event.size;
+        var deltaWidth = canvasWidth / event.size;
+        var deltaHeight = canvasHeight / event.size;
 
         var imgDeltaWidth = img.width / event.size;
         var imgDeltaHeight = img.height / event.size;
@@ -177,18 +166,21 @@ function redraw(event, canvas) {
 	var oContext = oCanvas.getContext("2d");
 	var oContextGrid = oCanvasGrid.getContext("2d");
 
-//        dumpSquares(event.squares)
-
         // this is where we have to loop over the squares...
         for (var i=0; i<event.size; i++) {
             for (var j=0; j<event.size; j++) {
                 let square = event.squares.cells[i][j];
-                oContext.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight);
-                oContextGrid.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight);
+                for (var w=0; w<2; w++) {
+                    for (var h=0; h<2; h++) {
+                        oContext.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth + h * canvasWidth, i*deltaHeight + w * canvasHeight, deltaWidth, deltaHeight);
+                        oContextGrid.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth + h * canvasWidth, i*deltaHeight + w * canvasHeight, deltaWidth, deltaHeight);
+                    }
+                }
             }
         }
 
-	for (var j = 0; j<=event.size; j++) {
+
+	for (var j = 0; j<=2 * event.size; j++) {
 	    oContextGrid.beginPath();
 	    oContextGrid.moveTo(j * deltaWidth, 0);
 	    oContextGrid.lineTo(j * deltaWidth, oCanvas.height);
