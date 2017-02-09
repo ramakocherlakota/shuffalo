@@ -166,9 +166,16 @@ function redraw(event, canvas) {
 	var oContext = oCanvas.getContext("2d");
 	var oContextGrid = oCanvasGrid.getContext("2d");
 
+        console.log("received redraw event: hflip = " + event.hflip + " vflip = " + event.vflip);
+
         // this is where we have to loop over the squares...
         for (var v=0; v<2; v++) {
             for (var h=0; h<2; h++) {
+                let hscale = (h > 0 && event.hflip) ? -1 : 1;
+                let vscale = (v > 0 && event.vflip) ? -1 : 1;
+
+                oContext.scale(hscale, vscale);
+
                 for (var i=0; i<event.size; i++) {
                     for (var j=0; j<event.size; j++) {
                         let square = event.squares.cells[i][j];
