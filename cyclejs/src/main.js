@@ -110,6 +110,8 @@ function main(sources) {
                                                         size : squares.cells.length,
                                                         imageFile : i.value,
                                                         flip : (squares.hflip ? 1 : 0) + (squares.vflip ? 1 : 0),
+                                                        hflip : squares.hflip,
+                                                        vflip : squares.vflip,
                                                         showGrid : sg.value,
                                                         squares : squares
                                                     }

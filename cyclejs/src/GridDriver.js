@@ -167,13 +167,13 @@ function redraw(event, canvas) {
 	var oContextGrid = oCanvasGrid.getContext("2d");
 
         // this is where we have to loop over the squares...
-        for (var i=0; i<event.size; i++) {
-            for (var j=0; j<event.size; j++) {
-                let square = event.squares.cells[i][j];
-                for (var w=0; w<2; w++) {
-                    for (var h=0; h<2; h++) {
-                        oContext.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth + h * canvasWidth, i*deltaHeight + w * canvasHeight, deltaWidth, deltaHeight);
-                        oContextGrid.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth + h * canvasWidth, i*deltaHeight + w * canvasHeight, deltaWidth, deltaHeight);
+        for (var v=0; v<2; v++) {
+            for (var h=0; h<2; h++) {
+                for (var i=0; i<event.size; i++) {
+                    for (var j=0; j<event.size; j++) {
+                        let square = event.squares.cells[i][j];
+                        oContext.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth + h * canvasWidth, i*deltaHeight + v * canvasHeight, deltaWidth, deltaHeight);
+                        oContextGrid.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth + h * canvasWidth, i*deltaHeight + v * canvasHeight, deltaWidth, deltaHeight);
                     }
                 }
             }
@@ -199,6 +199,10 @@ function redraw(event, canvas) {
         else {
 	    ctx.drawImage(oCanvas, 0, 0);
         }
+
+        var debugCanvas = document.getElementById("debugCanvas");
+	var debugCtx = debugCanvas.getContext("2d");
+        debugCtx.drawImage(oCanvas, 0, 0);
     }
     img.onerror = function(err) {
 	// TODO do something useful
