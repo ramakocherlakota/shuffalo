@@ -174,7 +174,7 @@ function redraw(event, canvas) {
                 let hscale = (h > 0 && event.hflip) ? -1 : 1;
                 let vscale = (v > 0 && event.vflip) ? -1 : 1;
 
-                oContext.scale(hscale, vscale);
+                oContext.setTransform(hscale, 0, 0, vscale, 0, 0);
 
                 for (var i=0; i<event.size; i++) {
                     for (var j=0; j<event.size; j++) {
@@ -210,6 +210,9 @@ function redraw(event, canvas) {
         var debugCanvas = document.getElementById("debugCanvas");
 	var debugCtx = debugCanvas.getContext("2d");
         debugCtx.drawImage(oCanvas, 0, 0);
+//        debugCtx.setTransform(-1, 0, 0, 1, 0, 0);
+//        debugCtx.translate(-debugCanvas.width, 0);
+//        debugCtx.drawImage(img, 0, 0, img.width, img.height, 0, 0, debugCanvas.width, debugCanvas.height);
     }
     img.onerror = function(err) {
 	// TODO do something useful
