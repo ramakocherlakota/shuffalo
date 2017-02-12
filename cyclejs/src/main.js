@@ -31,19 +31,57 @@ function modPos(arg, size) {
 function moveFunction(direction, at, by, size, hflip, vflip) {
     return function(squares, i, j) {
         if (direction === 'horz') {
-            if (i == at) {
-                return squares[i][modPos(j-by, size)]
+            let delta = modPos(j-by, 2 * size)
+            if (hflip) {
+                if (delta >= size) {
+                    if (i == at || i == size - 1 - at) {
+                        return squares[size - 1 - i][delta % size]
+                    }
+                    else {
+                        return squares[i][j]
+                    }
+                }
+                else {
+                    if (i == at || i == size - 1 - at) {
+                        return squares[i][delta % size]
+                    }
+                    else {
+                        return squares[i][j]
+                    }
+                }
             }
-            else if (hflip && (i == size - 1 - at)) {
-                return squares[i][modPos(j-by, size)]
+            else if (i == at) {
+                return squares[i][delta % size]
+            }
+            else {
+                return squares[i][j]
             }
         }
         else if (direction === 'vert') {
-            if (j == at) {
-                return squares[modPos(i-by, size)][j]
+            let delta = modPos(i-by, 2 * size)
+            if (vflip) {
+                if (delta >= size) {
+                    if (j == at || j == size - 1 - at) {
+                        return squares[delta % size][size - 1 - j]
+                    }
+                    else {
+                        return squares[i][j]
+                    }
+                }
+                else {
+                    if (j == at || j == size - 1 - at) {
+                        return squares[delta % size][j]
+                    }
+                    else {
+                        return squares[i][j]
+                    }
+                }
             }
-            else if (vflip && (j == size - 1 - at)) {
-                return squares[modPos(i-by, size)][j]
+            else if (j == at) {
+                return squares[delta % size][j]
+            }
+            else {
+                return squares[i][j]
             }
         }
         return squares[i][j]
