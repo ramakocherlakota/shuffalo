@@ -96,21 +96,21 @@ function dragMouse(event, canvas) {
         var cellTop = Math.floor(rowOrColumn * canvas.height / event.size);
         var cellHeight = Math.floor(canvas.height / event.size);
 
-        var by =  (event.by % canvas.width) + (event.by < 0 ? canvas.width : 0)
+        var by =  (event.by % sourceCanvas.width) + (event.by < 0 ? sourceCanvas.width : 0)
 
         ctx.drawImage(sourceCanvas, 
                       0, cellTop, sourceCanvas.width - by, cellHeight,
                       by, cellTop, sourceCanvas.width - by, cellHeight);
         
         ctx.drawImage(sourceCanvas, 
-                      canvas.width - by, cellTop, by, cellHeight,
+                      sourceCanvas.width - by, cellTop, by, cellHeight,
                       0, cellTop, by, cellHeight);
     }
     else {
         var cellLeft = Math.floor(rowOrColumn * canvas.width / event.size);
         var cellWidth = Math.floor(canvas.width / event.size);
 
-        var by =  (event.by % canvas.height) + (event.by < 0 ? canvas.height : 0)
+        var by =  (event.by % sourceCanvas.height) + (event.by < 0 ? sourceCanvas.height : 0)
 
         ctx.drawImage(sourceCanvas, 
                       cellLeft, 0, cellWidth, sourceCanvas.height - by,
