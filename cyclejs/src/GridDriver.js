@@ -144,14 +144,14 @@ function copySquare(src, srcX, srcY, srcWidth, srcHeight, dst, dstX, dstY, dstWi
     console.log("in copySquare: hflip = " + hflip + " vflip = " + vflip);
     if (hflip) {
         if (vflip) {
-            dst.setTransform(-1, 0, 0, -1, 2 * dstWidth - dstX, 2 * dstHeight - dstY);            
+            dst.setTransform(-1, 0, 0, -1, dstWidth + dstX, dstHeight + dstY);            
         }
         else {
-            dst.setTransform(1, 0, 0, -1, dstX, 2 * dstHeight - dstY);
+            dst.setTransform(1, 0, 0, -1, dstX, dstHeight + dstY);
         }
     }
     else if (vflip) {
-        dst.setTransform(-1, 0, 0, 1, 2 * dstWidth - dstX, dstY);
+        dst.setTransform(-1, 0, 0, 1, dstWidth + dstX, dstY);
     }
     else {
         dst.setTransform(1, 0, 0, 1, dstX, dstY);
@@ -222,7 +222,7 @@ function redraw(event, canvas) {
         // add the flipped versions as appropriate
         for (var v=0; v<2; v++) {
             for (var h=0; h<2; h++) {
-                if (h > 0 && v > 0) {
+                if (h > 0 || v > 0) {
                     let hflip = (h > 0 && event.hflip);
                     let vflip = (v > 0 && event.vflip);
                     console.log("drawing extra copies : h = " + h + " v = " + v + " hflip = " + hflip + " vflip = " + vflip);
