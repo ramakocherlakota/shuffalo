@@ -141,7 +141,6 @@ var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
 
 function copySquare(src, srcX, srcY, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight, hflip, vflip) {
-    console.log("in copySquare: hflip = " + hflip + " vflip = " + vflip);
     if (hflip) {
         if (vflip) {
             dst.setTransform(-1, 0, 0, -1, dstWidth + dstX, dstHeight + dstY);            
@@ -187,13 +186,10 @@ function redraw(event, canvas) {
 	var oContext = oCanvas.getContext("2d");
 	var oContextGrid = oCanvasGrid.getContext("2d");
 
-        console.log("received redraw event: hflip = " + event.hflip + " vflip = " + event.vflip);
-
         // this is where we have to loop over the squares...
         for (var i=0; i<event.size; i++) {
             for (var j=0; j<event.size; j++) {
                 let square = event.squares.cells[i][j];
-                console.log("square (" + i + ", " + j + ") hflip = " + square.hflip + " vflip = " + square.vflip);
                 copySquare(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, oContext, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight, square.hflip, square.vflip);
                 copySquare(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, oContextGrid, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight, square.hflip, square.vflip);
             }
@@ -208,7 +204,6 @@ function redraw(event, canvas) {
                 if (h > 0 || v > 0) {
                     let hflip = (h > 0 && event.hflip);
                     let vflip = (v > 0 && event.vflip);
-                    console.log("drawing extra copies : h = " + h + " v = " + v + " hflip = " + hflip + " vflip = " + vflip);
                     copySquare(canvas, 0, 0, canvasWidth, canvasHeight, oContext, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
                     copySquare(canvas, 0, 0, canvasWidth, canvasHeight, oContextGrid, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
                 }
