@@ -28,15 +28,21 @@ function modPos(arg, size) {
     return arg % size;
 }
 
-function moveFunction(direction, at, by, size) {
+function moveFunction(direction, at, by, size, hflip, vflip) {
     return function(squares, i, j) {
         if (direction === 'horz') {
             if (i == at) {
                 return squares[i][modPos(j-by, size)]
             }
+            else if (hflip && (i == size - 1 - at)) {
+                return squares[i][modPos(j-by, size)]
+            }
         }
         else if (direction === 'vert') {
             if (j == at) {
+                return squares[modPos(i-by, size)][j]
+            }
+            else if (vflip && (j == size - 1 - at)) {
                 return squares[modPos(i-by, size)][j]
             }
         }
@@ -57,7 +63,7 @@ function actOn(squares, move) {
         return startingSquares(move.size, move.flip > 0, move.flip > 1);
     }
 
-    let moveFn = moveFunction(move.direction, move.at, move.by, move.size)
+    let moveFn = moveFunction(move.direction, move.at, move.by, move.size, move.flip > 0, move.flip > 1);
     var newCells = new Array();
     for (let i=0; i<move.size; i++) {
         newCells[i] = new Array();
