@@ -105,6 +105,18 @@ function dragMouse(event, canvas) {
         ctx.drawImage(sourceCanvas, 
                       sourceCanvas.width - by, cellTop, by, cellHeight,
                       0, cellTop, by, cellHeight);
+
+        if (event.flip > 0 && rowOrColumn != (event.size - 1) / 2) {
+            cellTop = Math.floor((event.size - 1 - rowOrColumn) * canvas.height / event.size);
+            ctx.drawImage(sourceCanvas, 
+                          0, cellTop, sourceCanvas.width - by, cellHeight,
+                          by, cellTop, sourceCanvas.width - by, cellHeight);
+            
+            ctx.drawImage(sourceCanvas, 
+                          sourceCanvas.width - by, cellTop, by, cellHeight,
+                          0, cellTop, by, cellHeight);
+        }
+
     }
     else {
         var cellLeft = Math.floor(rowOrColumn * canvas.width / event.size);
@@ -119,6 +131,18 @@ function dragMouse(event, canvas) {
         ctx.drawImage(sourceCanvas, 
                       cellLeft, sourceCanvas.height - by, cellWidth, by,
                       cellLeft, 0, cellWidth, by);
+
+
+        if (event.flip > 1 && rowOrColumn != (event.size - 1) / 2) {
+            cellLeft = Math.floor((event.size - 1 - rowOrColumn) * canvas.width / event.size);
+            ctx.drawImage(sourceCanvas, 
+                          cellLeft, 0, cellWidth, sourceCanvas.height - by,
+                          cellLeft, by, cellWidth, sourceCanvas.height - by);
+            
+            ctx.drawImage(sourceCanvas, 
+                          cellLeft, sourceCanvas.height - by, cellWidth, by,
+                          cellLeft, 0, cellWidth, by);
+        }
     }
 }
 
