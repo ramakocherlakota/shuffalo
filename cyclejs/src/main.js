@@ -35,26 +35,26 @@ function moveFunction(direction, at, by, size, hflip, vflip) {
             if (hflip) {
                 if (delta >= size) {
                     if (i == at || i == size - 1 - at) {
-                        return squares[size - 1 - i][delta % size]
+                        return {square : squares[size - 1 - i][delta % size], hflip : true}
                     }
                     else {
-                        return squares[i][j]
+                        return {square : squares[i][j]}
                     }
                 }
                 else {
                     if (i == at || i == size - 1 - at) {
-                        return squares[i][delta % size]
+                        return {square : squares[i][delta % size]}
                     }
                     else {
-                        return squares[i][j]
+                        return {square : squares[i][j]}
                     }
                 }
             }
             else if (i == at) {
-                return squares[i][delta % size]
+                return {square : squares[i][delta % size]}
             }
             else {
-                return squares[i][j]
+                return {square : squares[i][j]}
             }
         }
         else if (direction === 'vert') {
@@ -62,34 +62,43 @@ function moveFunction(direction, at, by, size, hflip, vflip) {
             if (vflip) {
                 if (delta >= size) {
                     if (j == at || j == size - 1 - at) {
-                        return squares[delta % size][size - 1 - j]
+                        return {square : squares[delta % size][size - 1 - j], vflip : true}
                     }
                     else {
-                        return squares[i][j]
+                        return {square : squares[i][j]}
                     }
                 }
                 else {
                     if (j == at || j == size - 1 - at) {
-                        return squares[delta % size][j]
+                        return {square : squares[delta % size][j]}
                     }
                     else {
-                        return squares[i][j]
+                        return {square : squares[i][j]}
                     }
                 }
             }
             else if (j == at) {
-                return squares[delta % size][j]
+                return {square : squares[delta % size][j]}
             }
             else {
-                return squares[i][j]
+                return {square : squares[i][j]}
             }
         }
-        return squares[i][j]
+        return {square : squares[i][j]}
     }
 }
 
-function copyCell(square) {
-    return {row : square.row, col: square.col, hflip : square.hflip, vflip : square.vflip}
+function toggleIf(base, flag) {
+    if (flag) {
+        return ! base
+    }
+    else {
+        return base;
+    }
+}
+
+function copyCell(cell) {
+    return {row : cell.square.row, col: cell.square.col, hflip : toggleIf(cell.square.hflip, cell.hflip), vflip : toggleIf(cell.square.vflip, cell.vflip)}
 }
 
 function actOn(squares, move) {
