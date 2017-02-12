@@ -200,12 +200,7 @@ function redraw(event, canvas) {
         }
 
 	var ctx = canvas.getContext("2d");
-        if (event.showGrid == 'always') {
-	    ctx.drawImage(oCanvasGrid, 0, 0);
-        }
-        else {
-	    ctx.drawImage(oCanvas, 0, 0);
-        }
+	ctx.drawImage(oCanvas, 0, 0);
 
         // add the flipped versions as appropriate
         for (var v=0; v<2; v++) {
@@ -231,6 +226,13 @@ function redraw(event, canvas) {
 	    oContextGrid.lineTo(oCanvas.width, j * deltaHeight);
 	    oContextGrid.stroke();
 	}
+
+        if (event.showGrid == 'always') {
+	    ctx.drawImage(oCanvasGrid, 0, 0);
+        }
+        else {
+	    ctx.drawImage(oCanvas, 0, 0);
+        }
 
         var debugCanvas = document.getElementById("debugCanvas");
 	var debugCtx = debugCanvas.getContext("2d");
