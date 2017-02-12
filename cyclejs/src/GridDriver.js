@@ -157,6 +157,8 @@ function copySquare(src, srcX, srcY, srcWidth, srcHeight, dst, dstX, dstY, dstWi
         dst.setTransform(1, 0, 0, 1, dstX, dstY);
     }
     dst.drawImage(src, srcX, srcY, srcWidth, srcHeight, 0, 0, dstWidth, dstHeight);
+
+    dst.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 function redraw(event, canvas) {
@@ -197,20 +199,6 @@ function redraw(event, canvas) {
             }
         }
 
-
-	for (var j = 0; j<=2 * event.size; j++) {
-	    oContextGrid.beginPath();
-	    oContextGrid.moveTo(j * deltaWidth, 0);
-	    oContextGrid.lineTo(j * deltaWidth, oCanvas.height);
-	    oContextGrid.stroke();
-	    
-	    oContextGrid.beginPath();
-	    oContextGrid.moveTo(0, j * deltaHeight);
-	    oContextGrid.lineTo(oCanvas.width, j * deltaHeight);
-	    oContextGrid.stroke();
-	}
-
-
 	var ctx = canvas.getContext("2d");
         if (event.showGrid == 'always') {
 	    ctx.drawImage(oCanvasGrid, 0, 0);
@@ -227,13 +215,26 @@ function redraw(event, canvas) {
                     let vflip = (v > 0 && event.vflip);
                     console.log("drawing extra copies : h = " + h + " v = " + v + " hflip = " + hflip + " vflip = " + vflip);
                     copySquare(canvas, 0, 0, canvasWidth, canvasHeight, oContext, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
+                    copySquare(canvas, 0, 0, canvasWidth, canvasHeight, oContextGrid, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
                 }
             }
         }
 
+	for (var j = 0; j<=4 * event.size; j++) {
+	    oContextGrid.beginPath();
+	    oContextGrid.moveTo(j * deltaWidth, 0);
+	    oContextGrid.lineTo(j * deltaWidth, oCanvas.height);
+	    oContextGrid.stroke();
+	    
+	    oContextGrid.beginPath();
+	    oContextGrid.moveTo(0, j * deltaHeight);
+	    oContextGrid.lineTo(oCanvas.width, j * deltaHeight);
+	    oContextGrid.stroke();
+	}
+
         var debugCanvas = document.getElementById("debugCanvas");
 	var debugCtx = debugCanvas.getContext("2d");
-        debugCtx.drawImage(oCanvas, 0, 0);
+        debugCtx.drawImage(oCanvasGrid, 0, 0);
 
     }
     img.onerror = function(err) {
