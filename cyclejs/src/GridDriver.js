@@ -140,6 +140,25 @@ function hideLines(canvas) {
 var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
 
+function copySquare(src, srcX, srcY, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight, hflip, vflip) {
+    console.log("in copySquare: hflip = " + hflip + " vflip = " + vflip);
+    if (hflip) {
+        if (vflip) {
+            dst.setTransform(-1, 0, 0, -1, 2 * dstWidth - dstX, 2 * dstHeight - dstY);            
+        }
+        else {
+            dst.setTransform(1, 0, 0, -1, dstX, 2 * dstHeight - dstY);
+        }
+    }
+    else if (vflip) {
+        dst.setTransform(-1, 0, 0, 1, 2 * dstWidth - dstX, dstY);
+    }
+    else {
+        dst.setTransform(1, 0, 0, 1, dstX, dstY);
+    }
+    dst.drawImage(src, srcX, srcY, srcWidth, srcHeight, 0, 0, dstWidth, dstHeight);
+}
+
 function redraw(event, canvas) {
 
     let canvasWidth = canvas.width;
@@ -169,20 +188,12 @@ function redraw(event, canvas) {
         console.log("received redraw event: hflip = " + event.hflip + " vflip = " + event.vflip);
 
         // this is where we have to loop over the squares...
-        for (var v=0; v<2; v++) {
-            for (var h=0; h<2; h++) {
-                let hscale = (h > 0 && event.hflip) ? -1 : 1;
-                let vscale = (v > 0 && event.vflip) ? -1 : 1;
-
-                oContext.setTransform(hscale, 0, 0, vscale, 0, 0);
-
-                for (var i=0; i<event.size; i++) {
-                    for (var j=0; j<event.size; j++) {
-                        let square = event.squares.cells[i][j];
-                        oContext.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth + h * canvasWidth, i*deltaHeight + v * canvasHeight, deltaWidth, deltaHeight);
-                        oContextGrid.drawImage(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, j*deltaWidth + h * canvasWidth, i*deltaHeight + v * canvasHeight, deltaWidth, deltaHeight);
-                    }
-                }
+        for (var i=0; i<event.size; i++) {
+            for (var j=0; j<event.size; j++) {
+                let square = event.squares.cells[i][j];
+                console.log("square (" + i + ", " + j + ") hflip = " + square.hflip + " vflip = " + square.vflip);
+                copySquare(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, oContext, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight, square.hflip, square.vflip);
+                copySquare(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, oContextGrid, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight, square.hflip, square.vflip);
             }
         }
 
@@ -199,6 +210,7 @@ function redraw(event, canvas) {
 	    oContextGrid.stroke();
 	}
 
+
 	var ctx = canvas.getContext("2d");
         if (event.showGrid == 'always') {
 	    ctx.drawImage(oCanvasGrid, 0, 0);
@@ -207,12 +219,22 @@ function redraw(event, canvas) {
 	    ctx.drawImage(oCanvas, 0, 0);
         }
 
+        // add the flipped versions as appropriate
+        for (var v=0; v<2; v++) {
+            for (var h=0; h<2; h++) {
+                if (h > 0 && v > 0) {
+                    let hflip = (h > 0 && event.hflip);
+                    let vflip = (v > 0 && event.vflip);
+                    console.log("drawing extra copies : h = " + h + " v = " + v + " hflip = " + hflip + " vflip = " + vflip);
+                    copySquare(canvas, 0, 0, canvasWidth, canvasHeight, oContext, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
+                }
+            }
+        }
+
         var debugCanvas = document.getElementById("debugCanvas");
 	var debugCtx = debugCanvas.getContext("2d");
         debugCtx.drawImage(oCanvas, 0, 0);
-//        debugCtx.setTransform(-1, 0, 0, 1, 0, 0);
-//        debugCtx.translate(-debugCanvas.width, 0);
-//        debugCtx.drawImage(img, 0, 0, img.width, img.height, 0, 0, debugCanvas.width, debugCanvas.height);
+
     }
     img.onerror = function(err) {
 	// TODO do something useful
