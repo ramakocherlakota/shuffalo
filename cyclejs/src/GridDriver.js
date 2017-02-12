@@ -313,6 +313,7 @@ function makeMouseTracker(canvas, source$) {
                     direction : p.direction,
                     by : findByCells(p.direction, p.by, p.size, canvas),
                     at : findRowOrColumn(p.direction, p.at, p.size, canvas),
+                    flip : p.flip,
                     size : p.size
                 };
 	    })

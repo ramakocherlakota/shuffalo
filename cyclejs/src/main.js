@@ -54,7 +54,7 @@ function actOn(squares, move) {
     }
 
     if (move.size != squares.cells.length) {
-        return startingSquares(move.size);
+        return startingSquares(move.size, move.flip > 0, move.flip > 1);
     }
 
     let moveFn = moveFunction(move.direction, move.at, move.by, move.size)
