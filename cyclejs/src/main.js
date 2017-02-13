@@ -1,10 +1,11 @@
-import Cycle from '@cycle/core';
-import CycleDOM from '@cycle/dom';
+import {run} from '@cycle/xstream-run';
+import {makeDOMDriver} from '@cycle/dom';
 import CycleStorage from '@cycle/storage';
 
 import GridDriver from './GridDriver';
 
-const Rx = require(`rx-dom`)
+import xs from 'xstream'
+
 
 function startingSquares(n, hflip, vflip) {
     var array = new Array();
@@ -149,28 +150,28 @@ function main(sources) {
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
 
     const starting3 = startingSquares(3, false, false)
-    const starting$ = Rx.Observable.combineLatest(sizeSelect$, flipSelect$,
-                                                  function(s, f) {
-                                                      return startingSquares(s.value, f.value > 0, f.value > 1);
-                                                  }).startWith(starting3);
-
+    const starting$ = xs.combine(sizeSelect$, flipSelect$,
+                                 function(s, f) {
+                                     return startingSquares(s.value, f.value > 0, f.value > 1);
+                                 }).startWith(starting3);
+    
     const squares$ = starting$.flatMap(s => moveDone$.scan(actOn, s).startWith(s))
 
-    const redraw$ = Rx.Observable.combineLatest(imgSelect$, showGrid$, squares$,
-                                                function(i, sg, squares) {
-                                                    return {
-                                                        eventType :"redraw", 
-                                                        size : squares.cells.length,
-                                                        imageFile : i.value,
-                                                        flip : (squares.hflip ? 1 : 0) + (squares.vflip ? 1 : 0),
-                                                        hflip : squares.hflip,
-                                                        vflip : squares.vflip,
-                                                        showGrid : sg.value,
-                                                        squares : squares
-                                                    }
-                                                });
+    const redraw$ = xs.combine(imgSelect$, showGrid$, squares$,
+                               function(i, sg, squares) {
+                                   return {
+                                       eventType :"redraw", 
+                                       size : squares.cells.length,
+                                       imageFile : i.value,
+                                       flip : (squares.hflip ? 1 : 0) + (squares.vflip ? 1 : 0),
+                                       hflip : squares.hflip,
+                                       vflip : squares.vflip,
+                                       showGrid : sg.value,
+                                       squares : squares
+                                   }
+                               });
 
-    const storage$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
+//    const storage$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
 
     return {
 	GridDriver : redraw$,
@@ -185,5 +186,5 @@ window.onload = function() {
 //        Storage : CycleStorage
     }
 
-    Cycle.run(main, drivers);
+    run(main, drivers);
 }    

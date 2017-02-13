@@ -1,4 +1,7 @@
-const Rx = require(`rx-dom`)
+import xs from 'xstream'
+
+import Cycle from '@cycle/core';
+import CycleDOM from '@cycle/dom';
 
 const GridDriver = {
     makeGridDriver
@@ -72,7 +75,7 @@ function finishDrag(p, canvas) {
     var byCells = findByCells(p.direction, p.by, p.size, canvas);
     var delta = byCells * canvasWidthOrHeight(p.direction, canvas) / p.size  - p.by;
 
-    Rx.Observable.interval(slidingTimeMs / slidingFrames).take(slidingFrames)
+    xs.periodic(slidingTimeMs / slidingFrames).take(slidingFrames)
         .forEach(n => {
             dragMouse({showGrid : p.showGrid,
                        direction : p.direction,
@@ -271,7 +274,7 @@ function makeMouseTracker(canvas, source$) {
     const size$ = source$.filter(event => event.eventType === "redraw").pluck("size")
     const flip$ = source$.filter(event => event.eventType === "redraw").pluck("flip")
     
-    const mouseDown$ = Rx.DOM.mousedown(canvas);
+    const mouseDown$ = source$.DOM.events("mousedown")
     
     const down$ = mouseDown$.map(function (md) {
 	md.preventDefault();
@@ -282,10 +285,10 @@ function makeMouseTracker(canvas, source$) {
     down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
         .subscribe(sg => {if (sg) {showLines(canvas);}})
     
-    const dragger$ = mouseDown$.flatMap(function (md) {
+    const dragger$ = mouseDown$.map(function (md) {
 	md.preventDefault();
         
-	var mouseMove$ =  Rx.DOM.mousemove(document)
+	var mouseMove$ =  source$.DOM.events("mousemove")
 	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
 	    .filter(function(p) {return p.x != p.y;});
 
@@ -315,7 +318,7 @@ function makeMouseTracker(canvas, source$) {
         
 	const movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, flip$, makeOutput);
         
-	const movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
+	const movesUntilDone$ = movesWithDirection$.endWhen(source$.DOM.events("mouseup").merge(source$.DOM.events("mouseleave")))
 
 	const finishDrag$ = movesUntilDone$.startWith({by : 0}).last().map(function(p) {
 	    return {
@@ -344,7 +347,7 @@ function makeMouseTracker(canvas, source$) {
 
 
 	return movesUntilDone$.merge(finishDrag$).merge(moveDone$.delay(slidingTimeMs))
-    });
+    }).flatten();
 
     return dragger$;
 }
