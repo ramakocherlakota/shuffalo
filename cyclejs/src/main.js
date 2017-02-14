@@ -1,6 +1,6 @@
 import Cycle from '@cycle/core';
 import CycleDOM from '@cycle/dom';
-import CycleStorage from '@cycle/storage';
+import storageDriver from '@cycle/storage';
 
 import GridDriver from './GridDriver';
 
@@ -170,11 +170,12 @@ function main(sources) {
                                                     }
                                                 });
 
-    const storage$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
+    const storage$ = imgSelect$;
+    // Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
 
     return {
 	GridDriver : redraw$,
-//        Storage : storage$
+        Storage : storageDriver(storage$)
     };
 }
 
@@ -182,7 +183,7 @@ window.onload = function() {
     const drivers = {
         GridDriver : GridDriver.makeGridDriver("#canvas"),
         DOM : CycleDOM.makeDOMDriver('#main-container'),
-//        Storage : CycleStorage
+        Storage : storageDriver
     }
 
     Cycle.run(main, drivers);
