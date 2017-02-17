@@ -179,8 +179,12 @@ function main(sources) {
     };
 }
 
-window.onload = function() {
-    const drivers = {
+//Rx.Observable.prototype.addListener = Rx.Observable.prototype.subscribe;
+//Rx.ReplaySubject.prototype.addListener = Rx.ReplaySubject.prototype.subscribe;
+
+window.onload = function() { 
+
+   const drivers = {
         GridDriver : GridDriver.makeGridDriver("#canvas"),
         DOM : CycleDOM.makeDOMDriver('#main-container'),
         Storage : storageDriver
