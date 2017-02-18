@@ -170,16 +170,16 @@ function main(sources) {
                                                     }
                                                 });
 
-    const storage$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
+    const squaresStorage$ = squares$.map(sq => {return {key : "squares", value : sq.cells}});
+
+    const storage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGrid$).merge(squaresStorage$);
+    storage$.subscribe(console.log);
 
     return {
 	GridDriver : redraw$,
         storage : storage$
     };
 }
-
-//Rx.Observable.prototype.addListener = Rx.Observable.prototype.subscribe;
-//Rx.ReplaySubject.prototype.addListener = Rx.ReplaySubject.prototype.subscribe;
 
 window.onload = function() { 
 
