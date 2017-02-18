@@ -175,7 +175,7 @@ function main(sources) {
 
     return {
 	GridDriver : redraw$,
-        Storage : storageDriver(storage$)
+        storage : storage$
     };
 }
 
@@ -187,8 +187,8 @@ window.onload = function() {
    const drivers = {
         GridDriver : GridDriver.makeGridDriver("#canvas"),
         DOM : CycleDOM.makeDOMDriver('#main-container'),
-        Storage : storageDriver
-    }
+        storage : storageDriver
+   }
 
     Cycle.run(main, drivers);
 }    
