@@ -170,8 +170,7 @@ function main(sources) {
                                                     }
                                                 });
 
-    const storage$ = imgSelect$;
-    // Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
+    const storage$ = Rx.Observable.combineLatest(imgSelect$, sizeSelect$, flipSelect$, showGrid$, squares$);
 
     return {
 	GridDriver : redraw$,
