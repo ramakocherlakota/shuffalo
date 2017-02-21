@@ -1,15 +1,14 @@
 TODO
-- need to handle flips in dragging
-  - double the width and height of the offscreen canvases and add flips as necessary
-- port over to xstream so that the storage library will work
-  - https://github.com/staltz/xstream/wiki/Migrating-from-RxJS
-
-
-- unit tests
+- handle load from localstorage
+  - use the DOM methods instead of hardcoding html
+- reset to home position
+- paste json to actOn
+- shuffling (need some math to handle the 
+- bootstrap
 - use browserify notes to set up images in bundle
 
-canvas performance tips: 
-https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas
+- amazon device farm for testing
+
 
 
 

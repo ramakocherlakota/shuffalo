@@ -102,6 +102,11 @@ function copyCell(cell) {
 }
 
 function actOn(squares, move) {
+    if (move === "reset") {
+        console.log("reset!");
+        return startingSquares(squares.cells.length, squares.hflip, squares.vflip);
+    }
+
     if (!move.direction) {
         return squares;
     }
@@ -139,7 +144,7 @@ function actOn(squares, move) {
 function main(sources) {
     const gridDriver = sources.GridDriver;
     const moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
-
+//    const fromStorage$ = sources.storage.local;
 
     // TODO unhardcode the image path
 
@@ -148,15 +153,19 @@ function main(sources) {
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
 
+    const reset$ = sources.DOM.select("#reset").events("click").map(v => {return "reset"})
+
+
     const starting3 = startingSquares(3, false, false)
     const starting$ = Rx.Observable.combineLatest(sizeSelect$, flipSelect$,
                                                   function(s, f) {
                                                       return startingSquares(s.value, f.value > 0, f.value > 1);
                                                   }).startWith(starting3);
 
-    const squares$ = starting$.flatMap(s => moveDone$.scan(actOn, s).startWith(s))
 
-    const redraw$ = Rx.Observable.combineLatest(imgSelect$, showGrid$, squares$,
+    const squares$ = starting$.flatMap(s => moveDone$.merge(reset$).scan(actOn, s).startWith(s))
+
+    const redraw$ = Rx.Observable.combineLatest(imgSelect$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
                                                     return {
                                                         eventType :"redraw", 
@@ -172,12 +181,12 @@ function main(sources) {
 
     const squaresStorage$ = squares$.map(sq => {return {key : "squares", value : sq.cells}});
 
-    const storage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGrid$).merge(squaresStorage$);
-    storage$.subscribe(console.log);
+    const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGrid$).merge(squaresStorage$);
 
     return {
 	GridDriver : redraw$,
-        storage : storage$
+//        DOM : fromStorage$,
+        storage : toStorage$
     };
 }
 
