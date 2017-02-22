@@ -179,7 +179,7 @@ function main(sources) {
                                                     }
                                                 });
 
-    const squaresStorage$ = squares$.map(sq => {return {key : "squares", value : sq.cells}});
+    const squaresStorage$ = squares$.map(sq => {return {key : "squares", value : JSON.stringify(sq.cells)}});
 
     const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGrid$).merge(squaresStorage$);
 

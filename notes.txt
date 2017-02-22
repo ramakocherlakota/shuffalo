@@ -1,9 +1,16 @@
 TODO
+- saving is not right
+  - saving list of [Object] instead of actual squares
+  - undefined = undefined for some reason
+
+- reset to home position
+  - verify that reset is getting transmitted to save
+
 - handle load from localstorage
   - use the DOM methods instead of hardcoding html
-- reset to home position
+
 - paste json to actOn
-- shuffling (need some math to handle the 
+- shuffling (need some math to handle)
 - bootstrap
 - use browserify notes to set up images in bundle
 
