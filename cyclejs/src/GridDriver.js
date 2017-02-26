@@ -21,13 +21,17 @@ function dumpSquares(squares) {
     console.log("")
 }
 
+
+// o stands for offscreen
+var oCanvas = null; // without grid lines
+var oCanvasGrid = null; // with grid lines
+
 function makeGridDriver(canvasElt) {
-
-    const canvas = typeof canvasElt === `string` ?
-	document.querySelector(canvasElt) :
-	canvasElt
-
     return function(source$) {
+        var canvas = typeof canvasElt === `string` ?
+	    document.querySelector(canvasElt) :
+	    canvasElt
+
         const mouseTracker$ = makeMouseTracker(canvas, source$);
 
 	source$.filter(event => event.eventType === "redraw")
@@ -160,9 +164,6 @@ function hideLines(canvas) {
     }
 }
 
-// o stands for offscreen
-var oCanvas = null; // without grid lines
-var oCanvasGrid = null; // with grid lines
 
 function copySquare(src, srcX, srcY, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight, hflip, vflip) {
     if (hflip) {
@@ -185,6 +186,13 @@ function copySquare(src, srcX, srcY, srcWidth, srcHeight, dst, dstX, dstY, dstWi
 }
 
 function redraw(event, canvas) {
+    if (!canvas) {
+        canvas = document.getElementById(event.canvasId)
+        if (!canvas) {
+            console.log("no canvas!")
+            return;
+        }
+    }
 
     let canvasWidth = canvas.width;
     let canvasHeight = canvas.height;
@@ -266,6 +274,7 @@ function redraw(event, canvas) {
 }
 
 function makeMouseTracker(canvas, source$) {
+    console.log("in makeMouseTracker, canvas=" + canvas)
 
     const showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
     const size$ = source$.filter(event => event.eventType === "redraw").pluck("size")

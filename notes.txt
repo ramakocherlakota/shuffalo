@@ -17,6 +17,52 @@ TODO
 - amazon device farm for testing
 
 
+    <p>
+    <select id="image-chooser">
+      <option>bison.jpg</option>
+      <option>candyshop.jpg</option>
+      <option>carousel.jpg</option>
+      <option>clematis.jpg</option>
+      <option>epices.jpg</option>
+      <option>freycinet.jpg</option>
+      <option>hands_with_shells.jpg</option>
+      <option>jellyfish.jpg</option>
+      <option>log_and_fungi.jpg</option>
+      <option>puppy_and_dog.jpg</option>
+      <option>tidepool.jpg</option>
+    </select>
+    <p>
+      <select id="grid-chooser">
+        <option value="on-press">On Press</option>
+        <option value="never">Never</option>
+        <option value="always">Always</option>
+      </select>
+      Show Grid Lines
+    </p>
+    <p>
+      <a href="#" id="reset">Reset</a>
+    </p>
+    <p>
+      <select id="flip-chooser">
+        <option value="0">None</option>
+        <option value="1">One</option>
+        <option value="2">Two</option>
+      </select>
+      Flips
+    </p>
+    <p>
+      <select id="size-chooser">
+        <option value="3">3 x 3</option>
+        <option value="4">4 x 4</option>
+        <option value="5">5 x 5</option>
+      </select>
+      Size
+    </p>
+    <p>
+    <canvas id="debugCanvas" width="540" height="720"
+	    style="border:1px solid #000000;"></canvas>
+    </p>
+
 
 
 

@@ -1,10 +1,11 @@
 import Cycle from '@cycle/core';
 import CycleDOM from '@cycle/dom';
 import storageDriver from '@cycle/storage';
+const h = CycleDOM.h;
+const Rx = require(`rx-dom`)
 
 import GridDriver from './GridDriver';
 
-const Rx = require(`rx-dom`)
 
 function startingSquares(n, hflip, vflip) {
     var array = new Array();
@@ -103,7 +104,6 @@ function copyCell(cell) {
 
 function actOn(squares, move) {
     if (move === "reset") {
-        console.log("reset!");
         return startingSquares(squares.cells.length, squares.hflip, squares.vflip);
     }
 
@@ -144,7 +144,6 @@ function actOn(squares, move) {
 function main(sources) {
     const gridDriver = sources.GridDriver;
     const moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
-//    const fromStorage$ = sources.storage.local;
 
     // TODO unhardcode the image path
 
@@ -169,6 +168,7 @@ function main(sources) {
                                                 function(i, sg, squares) {
                                                     return {
                                                         eventType :"redraw", 
+                                                        canvasId : "canvas",
                                                         size : squares.cells.length,
                                                         imageFile : i.value,
                                                         flip : (squares.hflip ? 1 : 0) + (squares.vflip ? 1 : 0),
@@ -183,9 +183,42 @@ function main(sources) {
 
     const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGrid$).merge(squaresStorage$);
 
+    const storedFlip$ = sources.storage.local.getItem("flip").startWith(0);
+    const storedImg$ = sources.storage.local.getItem("img").startWith("bison.jpg");
+    const storedShowGrid$ = sources.storage.local.getItem("showGrid").startWith("on-press");
+    const storedSize$ = sources.storage.local.getItem("size").startWith(3);
+    const storedSquares$ = sources.storage.local.getItem("squares").startWith(startingSquares(3, false, false));
+    const stored$ = Rx.Observable.combineLatest(storedFlip$, storedImg$, storedShowGrid$, storedSize$, storedSquares$,
+                                                function(f, i, sg, sz, sq) {
+                                                    return {
+                                                        flip : f,
+                                                        img : i,
+                                                        showGrid : sg,
+                                                        size : sz,
+                                                        squares : sq
+                                                    };
+                                                });
+    
+    const jpgs = Array('bison.jpg', 'candyshop.jpg', 'carousel.jpg', 'clematis.jpg', 'epices.jpg', 'freycinet.jpg', 'hands_with_shells.jpg', 'jellyfish.jpg', 'log_and_fungi.jpg', 'puppy_and_dog.jpg', 'tidepool.jpg')
+
+    const grids = Array({value : "on-press", label: "On Press"},
+                        {value : "never", label: "Never"},
+                        {value : "always", label: "Always"});
+
+    const dom$ = stored$.map(s => h('div', [
+        h('p', [h('label', {for : "image-chooser"}, "Image"),
+                h('select', {id : "image-chooser"}, jpgs.map(jpg => h('option', jpg))),
+                ]),
+        h('p', [h('label', {for: "grid-chooser"}, "Grid"),
+                h('select', {id : "grid-chooser"}, grids.map(grid => h('option', {value : grid.value}, grid.label))),
+                ]),
+        h('p', h('a', {id : "reset", href : "#"}, "Reset"))
+        
+                                                                                     ]))
+
     return {
+        DOM : dom$,
 	GridDriver : redraw$,
-//        DOM : fromStorage$,
         storage : toStorage$
     };
 }
