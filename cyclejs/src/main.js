@@ -143,17 +143,19 @@ function actOn(squares, move) {
 
 function main(sources) {
     const localStorage = sources.storage.local;
+    const fromStorage$ = fromStorage(localStorage)
+
     const gridDriver = sources.GridDriver;
     const moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
 
     // TODO unhardcode the image path
 
     const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).map(file => {return {key : "img", value : file}})
-    const imgStore$ = localStorage.getItem("img").map(file => {return {key : "img", value : file}})
+    const imgStore$ = fromStorage$.img.map(file => {return {key : "img", value : file}});
     const img$ = imgStore$.merge(imgSelect$)
 
     const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "size", value : v}})
-    const sizeStore$ = localStorage.getItem("size").map(file => {return {key : "size", value : file}})
+    const sizeStore$ = fromStorage$.size.map(file => {return {key : "size", value : file}})
     const size$ = sizeStore$.merge(sizeSelect$)
 
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
@@ -191,7 +193,7 @@ function main(sources) {
 
 
     return {
-        DOM : domFromStorage(localStorage),
+        DOM : fromStorage$.DOM,
 	GridDriver : redraw$,
         storage : toStorage$
     };
@@ -208,7 +210,7 @@ window.onload = function() {
     Cycle.run(main, drivers);
 }    
 
-function domFromStorage(localStorage) {
+function fromStorage(localStorage) {
     const storedFlip$ = localStorage.getItem("flip").startWith(0);
     const storedImg$ = localStorage.getItem("img");
     const storedShowGrid$ = localStorage.getItem("showGrid").startWith("on-press");
@@ -261,5 +263,7 @@ function domFromStorage(localStorage) {
             h('p', h('a', {id : "reset", href : "#"}, "Reset"))])
     });
             
-    return dom$;
+    return {DOM : dom$,
+            size : storedSize$,
+            img : storedImg$}
 }
