@@ -158,13 +158,16 @@ function main(sources) {
     const sizeStore$ = fromStorage$.size.map(file => {return {key : "size", value : file}})
     const size$ = sizeStore$.merge(sizeSelect$)
 
-    const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
+    const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "flip", value : v}})
+    const flipStore$ = fromStorage$.flip.map(file => {return {key : "flip", value : file}})
+    const flip$ = flipStore$.merge(flipSelect$)
+
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
 
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return "reset"})
 
 
-    const starting$ = Rx.Observable.combineLatest(size$, flipSelect$,
+    const starting$ = Rx.Observable.combineLatest(size$, flip$,
                                                   function(s, f) {
                                                       return startingSquares(s.value || 3, f.value > 0, f.value > 1);
                                                   });
@@ -211,10 +214,10 @@ window.onload = function() {
 }    
 
 function fromStorage(localStorage) {
-    const storedFlip$ = localStorage.getItem("flip").startWith(0);
+    const storedFlip$ = localStorage.getItem("flip");
     const storedImg$ = localStorage.getItem("img");
     const storedShowGrid$ = localStorage.getItem("showGrid").startWith("on-press");
-    const storedSize$ = localStorage.getItem("size").startWith(3);
+    const storedSize$ = localStorage.getItem("size");
     const storedSquares$ = localStorage.getItem("squares").startWith(startingSquares(3, false, false));
 
     const stored$ = Rx.Observable.combineLatest(storedFlip$, storedImg$, storedShowGrid$, storedSize$, storedSquares$,
@@ -265,5 +268,6 @@ function fromStorage(localStorage) {
             
     return {DOM : dom$,
             size : storedSize$,
+            flip : storedFlip$,
             img : storedImg$}
 }
