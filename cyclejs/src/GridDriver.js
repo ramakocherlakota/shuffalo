@@ -194,6 +194,8 @@ function redraw(event, canvas) {
         }
     }
 
+    var size = event.size || 3;
+
     let canvasWidth = canvas.width;
     let canvasHeight = canvas.height;
 
@@ -209,18 +211,18 @@ function redraw(event, canvas) {
     var img = new Image();
     img.src = "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + (event.imageFile || "bison.jpg")
     img.onload = function() {
-        var deltaWidth = canvasWidth / event.size;
-        var deltaHeight = canvasHeight / event.size;
+        var deltaWidth = canvasWidth / size;
+        var deltaHeight = canvasHeight / size;
 
-        var imgDeltaWidth = img.width / event.size;
-        var imgDeltaHeight = img.height / event.size;
+        var imgDeltaWidth = img.width / size;
+        var imgDeltaHeight = img.height / size;
 
 	var oContext = oCanvas.getContext("2d");
 	var oContextGrid = oCanvasGrid.getContext("2d");
 
         // this is where we have to loop over the squares...
-        for (var i=0; i<event.size; i++) {
-            for (var j=0; j<event.size; j++) {
+        for (var i=0; i<size; i++) {
+            for (var j=0; j<size; j++) {
                 let square = event.squares.cells[i][j];
                 copySquare(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, oContext, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight, square.hflip, square.vflip);
                 copySquare(img, square.col * imgDeltaWidth, square.row * imgDeltaHeight, imgDeltaWidth, imgDeltaHeight, oContextGrid, j*deltaWidth, i*deltaHeight, deltaWidth, deltaHeight, square.hflip, square.vflip);
@@ -242,7 +244,7 @@ function redraw(event, canvas) {
             }
         }
 
-	for (var j = 0; j<=4 * event.size; j++) {
+	for (var j = 0; j<=4 * size; j++) {
 	    oContextGrid.beginPath();
 	    oContextGrid.moveTo(j * deltaWidth, 0);
 	    oContextGrid.lineTo(j * deltaWidth, oCanvas.height);

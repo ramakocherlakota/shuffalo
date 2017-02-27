@@ -149,23 +149,23 @@ function main(sources) {
     // TODO unhardcode the image path
 
     const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).map(file => {return {key : "img", value : file}})
-
     const imgStore$ = localStorage.getItem("img").map(file => {return {key : "img", value : file}})
-
     const img$ = imgStore$.merge(imgSelect$)
 
-    const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {key : "size", value : v}})
+    const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "size", value : v}})
+    const sizeStore$ = localStorage.getItem("size").map(file => {return {key : "size", value : file}})
+    const size$ = sizeStore$.merge(sizeSelect$)
+
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
 
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return "reset"})
 
 
-    const starting3 = startingSquares(3, false, false)
-    const starting$ = Rx.Observable.combineLatest(sizeSelect$, flipSelect$,
+    const starting$ = Rx.Observable.combineLatest(size$, flipSelect$,
                                                   function(s, f) {
-                                                      return startingSquares(s.value, f.value > 0, f.value > 1);
-                                                  }).startWith(starting3);
+                                                      return startingSquares(s.value || 3, f.value > 0, f.value > 1);
+                                                  });
 
 
     const squares$ = starting$.flatMap(s => moveDone$.merge(reset$).scan(actOn, s).startWith(s))
@@ -175,7 +175,7 @@ function main(sources) {
                                                     return {
                                                         eventType :"redraw", 
                                                         canvasId : "canvas",
-                                                        size : squares.cells.length,
+                                                        size : squares.cells.length || 3,
                                                         imageFile : i.value,
                                                         flip : (squares.hflip ? 1 : 0) + (squares.vflip ? 1 : 0),
                                                         hflip : squares.hflip,
@@ -250,10 +250,10 @@ function domFromStorage(localStorage) {
                                                                           jpg))),
                    ]),
             h('p', [h('label', {for: "grid-chooser"}, "Grid"),
-                    h('select', {id : "grid-chooser"}, grids.map(grid => h('option', {value : grid.value}, grid.label))),
+                    h('select', {id : "grid-chooser"}, grids.map(grid => h('option', {selected : grid.value === s.grid, value : grid.value}, grid.label))),
                    ]),
             h('p', [h('label', {for: "size-chooser"}, "Size"),
-                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {value : size.value}, size.label))),
+                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {selected : size.value === s.size, value : size.value}, size.label))),
                    ]),
             h('p', [h('label', {for: "flip-chooser"}, "Flip"),
                     h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {value : flip.value}, flip.label))),
