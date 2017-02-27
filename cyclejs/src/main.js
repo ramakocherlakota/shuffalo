@@ -142,12 +142,18 @@ function actOn(squares, move) {
 //}
 
 function main(sources) {
+    const localStorage = sources.storage.local;
     const gridDriver = sources.GridDriver;
     const moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
 
     // TODO unhardcode the image path
 
-    const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).startWith("bison.jpg").map(fname => "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + fname).map(file => {return {key : "img", value : file}})
+    const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).map(file => {return {key : "img", value : file}})
+
+    const imgStore$ = localStorage.getItem("img").map(file => {return {key : "img", value : file}})
+
+    const img$ = imgStore$.merge(imgSelect$)
+
     const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).startWith("3").map(v => {return {key : "size", value : v}})
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).startWith("0").map(v => {return {key : "flip", value : v}})
     const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
@@ -164,7 +170,7 @@ function main(sources) {
 
     const squares$ = starting$.flatMap(s => moveDone$.merge(reset$).scan(actOn, s).startWith(s))
 
-    const redraw$ = Rx.Observable.combineLatest(imgSelect$, showGrid$, squares$, 
+    const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
                                                     return {
                                                         eventType :"redraw", 
@@ -183,41 +189,9 @@ function main(sources) {
 
     const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGrid$).merge(squaresStorage$);
 
-    const storedFlip$ = sources.storage.local.getItem("flip").startWith(0);
-    const storedImg$ = sources.storage.local.getItem("img").startWith("bison.jpg");
-    const storedShowGrid$ = sources.storage.local.getItem("showGrid").startWith("on-press");
-    const storedSize$ = sources.storage.local.getItem("size").startWith(3);
-    const storedSquares$ = sources.storage.local.getItem("squares").startWith(startingSquares(3, false, false));
-    const stored$ = Rx.Observable.combineLatest(storedFlip$, storedImg$, storedShowGrid$, storedSize$, storedSquares$,
-                                                function(f, i, sg, sz, sq) {
-                                                    return {
-                                                        flip : f,
-                                                        img : i,
-                                                        showGrid : sg,
-                                                        size : sz,
-                                                        squares : sq
-                                                    };
-                                                });
-    
-    const jpgs = Array('bison.jpg', 'candyshop.jpg', 'carousel.jpg', 'clematis.jpg', 'epices.jpg', 'freycinet.jpg', 'hands_with_shells.jpg', 'jellyfish.jpg', 'log_and_fungi.jpg', 'puppy_and_dog.jpg', 'tidepool.jpg')
-
-    const grids = Array({value : "on-press", label: "On Press"},
-                        {value : "never", label: "Never"},
-                        {value : "always", label: "Always"});
-
-    const dom$ = stored$.map(s => h('div', [
-        h('p', [h('label', {for : "image-chooser"}, "Image"),
-                h('select', {id : "image-chooser"}, jpgs.map(jpg => h('option', jpg))),
-                ]),
-        h('p', [h('label', {for: "grid-chooser"}, "Grid"),
-                h('select', {id : "grid-chooser"}, grids.map(grid => h('option', {value : grid.value}, grid.label))),
-                ]),
-        h('p', h('a', {id : "reset", href : "#"}, "Reset"))
-        
-                                                                                     ]))
 
     return {
-        DOM : dom$,
+        DOM : domFromStorage(localStorage),
 	GridDriver : redraw$,
         storage : toStorage$
     };
@@ -233,3 +207,59 @@ window.onload = function() {
 
     Cycle.run(main, drivers);
 }    
+
+function domFromStorage(localStorage) {
+    const storedFlip$ = localStorage.getItem("flip").startWith(0);
+    const storedImg$ = localStorage.getItem("img");
+    const storedShowGrid$ = localStorage.getItem("showGrid").startWith("on-press");
+    const storedSize$ = localStorage.getItem("size").startWith(3);
+    const storedSquares$ = localStorage.getItem("squares").startWith(startingSquares(3, false, false));
+
+    const stored$ = Rx.Observable.combineLatest(storedFlip$, storedImg$, storedShowGrid$, storedSize$, storedSquares$,
+                                                function(f, i, sg, sz, sq) {
+                                                    return {
+                                                        flip : f,
+                                                        img : i,
+                                                        showGrid : sg,
+                                                        size : sz,
+                                                        squares : sq
+                                                    };
+                                                });
+    
+
+
+    const jpgs = Array('bison.jpg', 'candyshop.jpg', 'carousel.jpg', 'clematis.jpg', 'epices.jpg', 'freycinet.jpg', 'hands_with_shells.jpg', 'jellyfish.jpg', 'log_and_fungi.jpg', 'puppy_and_dog.jpg', 'tidepool.jpg')
+    
+    const grids = Array({value : "on-press", label: "On Press"},
+                        {value : "never", label: "Never"},
+                        {value : "always", label: "Always"});
+    
+    const sizes = Array({value : "3", label: "3 x 3"},
+                        {value : "4", label: "4 x 4"},
+                        {value : "5", label: "5 x 5"});
+    
+    const flips = Array({value : "0", label: "None"},
+                        {value : "1", label: "One"},
+                        {value : "2", label: "Two"});
+
+   
+    const dom$ = stored$.map(s => {
+        return h('div', [
+            h('p', [h('label', {for : "image-chooser"}, "Image"),
+                    h('select', {id : "image-chooser"}, jpgs.map(jpg => h('option', {selected : jpg === s.img}, 
+                                                                          jpg))),
+                   ]),
+            h('p', [h('label', {for: "grid-chooser"}, "Grid"),
+                    h('select', {id : "grid-chooser"}, grids.map(grid => h('option', {value : grid.value}, grid.label))),
+                   ]),
+            h('p', [h('label', {for: "size-chooser"}, "Size"),
+                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {value : size.value}, size.label))),
+                   ]),
+            h('p', [h('label', {for: "flip-chooser"}, "Flip"),
+                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {value : flip.value}, flip.label))),
+                   ]),
+            h('p', h('a', {id : "reset", href : "#"}, "Reset"))])
+    });
+            
+    return dom$;
+}

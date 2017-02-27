@@ -207,7 +207,7 @@ function redraw(event, canvas) {
     }
 
     var img = new Image();
-    img.src = event.imageFile;
+    img.src = "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + (event.imageFile || "bison.jpg")
     img.onload = function() {
         var deltaWidth = canvasWidth / event.size;
         var deltaHeight = canvasHeight / event.size;
@@ -274,8 +274,6 @@ function redraw(event, canvas) {
 }
 
 function makeMouseTracker(canvas, source$) {
-    console.log("in makeMouseTracker, canvas=" + canvas)
-
     const showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
     const size$ = source$.filter(event => event.eventType === "redraw").pluck("size")
     const flip$ = source$.filter(event => event.eventType === "redraw").pluck("flip")
