@@ -162,7 +162,9 @@ function main(sources) {
     const flipStore$ = fromStorage$.flip.map(file => {return {key : "flip", value : file}})
     const flip$ = flipStore$.merge(flipSelect$)
 
-    const showGrid$ = sources.DOM.select("#grid-chooser").events("change").map(ev => ev.target.value).startWith("on-press").map(v => {return {key: "showGrid", value : v}})
+    const showGridSelect$ = sources.DOM.select("#showGrid-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "showGrid", value : v}})
+    const showGridStore$ = fromStorage$.showGrid.map(file => {return {key : "showGrid", value : file}})
+    const showGrid$ = showGridStore$.merge(showGridSelect$)
 
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return "reset"})
 
@@ -175,6 +177,10 @@ function main(sources) {
 
     const squares$ = starting$.flatMap(s => moveDone$.merge(reset$).scan(actOn, s).startWith(s))
 
+    squares$.subscribe(console.log)
+    img$.subscribe(console.log)
+    showGridSelect$.subscribe(console.log)
+
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
                                                     return {
@@ -185,14 +191,16 @@ function main(sources) {
                                                         flip : (squares.hflip ? 1 : 0) + (squares.vflip ? 1 : 0),
                                                         hflip : squares.hflip,
                                                         vflip : squares.vflip,
-                                                        showGrid : sg.value,
+                                                        showGrid : sg.value || "on-press",
                                                         squares : squares
                                                     }
                                                 });
 
+    redraw$.subscribe(console.log)
+
     const squaresStorage$ = squares$.map(sq => {return {key : "squares", value : JSON.stringify(sq.cells)}});
 
-    const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGrid$).merge(squaresStorage$);
+    const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGridSelect$).merge(squaresStorage$);
 
 
     return {
@@ -216,7 +224,7 @@ window.onload = function() {
 function fromStorage(localStorage) {
     const storedFlip$ = localStorage.getItem("flip");
     const storedImg$ = localStorage.getItem("img");
-    const storedShowGrid$ = localStorage.getItem("showGrid").startWith("on-press");
+    const storedShowGrid$ = localStorage.getItem("showGrid");
     const storedSize$ = localStorage.getItem("size");
     const storedSquares$ = localStorage.getItem("squares").startWith(startingSquares(3, false, false));
 
@@ -254,14 +262,14 @@ function fromStorage(localStorage) {
                     h('select', {id : "image-chooser"}, jpgs.map(jpg => h('option', {selected : jpg === s.img}, 
                                                                           jpg))),
                    ]),
-            h('p', [h('label', {for: "grid-chooser"}, "Grid"),
-                    h('select', {id : "grid-chooser"}, grids.map(grid => h('option', {selected : grid.value === s.grid, value : grid.value}, grid.label))),
+            h('p', [h('label', {for: "showGrid-chooser"}, "Grid"),
+                    h('select', {id : "showGrid-chooser"}, grids.map(grid => h('option', {selected : grid.value === s.showGrid, value : grid.value}, grid.label))),
                    ]),
             h('p', [h('label', {for: "size-chooser"}, "Size"),
                     h('select', {id : "size-chooser"}, sizes.map(size => h('option', {selected : size.value === s.size, value : size.value}, size.label))),
                    ]),
             h('p', [h('label', {for: "flip-chooser"}, "Flip"),
-                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {value : flip.value}, flip.label))),
+                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {selected : flip.value === s.flip, value : flip.value}, flip.label))),
                    ]),
             h('p', h('a', {id : "reset", href : "#"}, "Reset"))])
     });
@@ -269,5 +277,6 @@ function fromStorage(localStorage) {
     return {DOM : dom$,
             size : storedSize$,
             flip : storedFlip$,
+            showGrid : storedShowGrid$,
             img : storedImg$}
 }
