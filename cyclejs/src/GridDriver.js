@@ -264,9 +264,10 @@ function redraw(event, canvas) {
         }
 
         var debugCanvas = document.getElementById("debugCanvas");
-	var debugCtx = debugCanvas.getContext("2d");
-        debugCtx.drawImage(oCanvasGrid, 0, 0);
-
+        if (debugCanvas) {
+	    var debugCtx = debugCanvas.getContext("2d");
+            debugCtx.drawImage(oCanvasGrid, 0, 0);
+        }
     }
     img.onerror = function(err) {
 	// TODO do something useful
