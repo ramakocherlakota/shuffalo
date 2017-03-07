@@ -169,17 +169,23 @@ function main(sources) {
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return "reset"})
 
 
-    const starting$ = Rx.Observable.combineLatest(size$, flip$,
-                                                  function(s, f) {
-                                                      return startingSquares(s.value || 3, f.value > 0, f.value > 1);
+    const starting$ = Rx.Observable.combineLatest(size$, flip$, fromStorage$.squares.first(),
+                                                  function(s, f, sq) {
+                                                      if (sq) {
+                                                          return {
+                                                              cells : sq,
+                                                              hflip: f.value > 0,
+                                                              vflip : f.value > 1,
+                                                              skipSave : true
+                                                          }
+                                                      }
+                                                      else {
+                                                          return startingSquares(s.value || 3, f.value > 0, f.value > 1);
+                                                      }
                                                   });
 
 
     const squares$ = starting$.flatMap(s => moveDone$.merge(reset$).scan(actOn, s).startWith(s))
-
-    squares$.subscribe(console.log)
-    img$.subscribe(console.log)
-    showGridSelect$.subscribe(console.log)
 
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
@@ -196,9 +202,11 @@ function main(sources) {
                                                     }
                                                 });
 
-    redraw$.subscribe(console.log)
+    squares$.subscribe(s => {console.log(JSON.stringify(s));})
 
-    const squaresStorage$ = squares$.map(sq => {return {key : "squares", value : JSON.stringify(sq.cells)}});
+    const squaresStorage$ = squares$
+        .filter(sq => {return !sq.skipSave;})
+        .map(sq => {return { key : "squares", value : JSON.stringify(sq.cells)}})
 
     const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGridSelect$).merge(squaresStorage$);
 
@@ -226,7 +234,7 @@ function fromStorage(localStorage) {
     const storedImg$ = localStorage.getItem("img");
     const storedShowGrid$ = localStorage.getItem("showGrid");
     const storedSize$ = localStorage.getItem("size");
-    const storedSquares$ = localStorage.getItem("squares").startWith(startingSquares(3, false, false));
+    const storedSquares$ = localStorage.getItem("squares").map(JSON.parse)
 
     const stored$ = Rx.Observable.combineLatest(storedFlip$, storedImg$, storedShowGrid$, storedSize$, storedSquares$,
                                                 function(f, i, sg, sz, sq) {
@@ -277,6 +285,7 @@ function fromStorage(localStorage) {
     return {DOM : dom$,
             size : storedSize$,
             flip : storedFlip$,
+            squares : storedSquares$,
             showGrid : storedShowGrid$,
             img : storedImg$}
 }
