@@ -102,6 +102,8 @@ function dragMouse(event, canvas) {
 
         var by =  (event.by % sourceCanvas.width) + (event.by < 0 ? sourceCanvas.width : 0)
 
+        console.log(event.by + " => " + by)
+
         ctx.drawImage(sourceCanvas, 
                       0, cellTop, sourceCanvas.width - by, cellHeight,
                       by, cellTop, sourceCanvas.width - by, cellHeight);

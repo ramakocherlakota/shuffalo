@@ -202,8 +202,6 @@ function main(sources) {
                                                     }
                                                 });
 
-    squares$.subscribe(s => {console.log(JSON.stringify(s));})
-
     const squaresStorage$ = squares$
         .filter(sq => {return !sq.skipSave;})
         .map(sq => {return { key : "squares", value : JSON.stringify(sq.cells)}})
