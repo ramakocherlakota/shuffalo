@@ -169,6 +169,7 @@ function main(sources) {
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return "reset"})
 
 
+    // problem is we're skipping saving whenever there was a first value to the squares!
     const starting$ = Rx.Observable.combineLatest(size$, flip$, fromStorage$.squares.first(),
                                                   function(s, f, sq) {
                                                       if (sq) {
@@ -201,6 +202,8 @@ function main(sources) {
                                                         squares : squares
                                                     }
                                                 });
+
+//    redraw$.subscribe(console.log)
 
     const squaresStorage$ = squares$
         .filter(sq => {return !sq.skipSave;})
