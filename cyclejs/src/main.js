@@ -12,10 +12,10 @@ function startingSquares(n, hflip, vflip) {
     for (var i=0; i<n; i++) {
         array[i] = new Array();
         for (var j=0; j<n; j++) {
-            array[i][j] = {row : i, col : j, hflip : false, vflip : false};
+            array[i][j] = {row : i, col : j, hflip : false, size : n, vflip : false};
         }
     }
-    return {cells : array, hflip : hflip, vflip : vflip};
+    return {cells : array, hflip : hflip, vflip : vflip, stored : false};
 }
     
 function modPos(arg, size) {
@@ -102,28 +102,38 @@ function copyCell(cell) {
     return {row : cell.square.row, col: cell.square.col, hflip : toggleIf(cell.square.hflip, cell.hflip), vflip : toggleIf(cell.square.vflip, cell.vflip)}
 }
 
-function actOn(squares, move) {
-    if (move === "reset") {
+function actOn(squares, event) {
+    if (event.eventType === "reset") {
         return startingSquares(squares.cells.length, squares.hflip, squares.vflip);
     }
 
-    if (!move.direction) {
+    if (event.eventType === "size") {
+        return startingSquares(event.value, squares.hflip, squares.vflip);
+    }
+
+    if (event.eventType === "flip") {
+        return startingSquares(squares.cells.length, event.value > 0, event.value > 1);
+    }
+
+    // must be a moveDone
+    
+    if (!event.direction) {
         return squares;
     }
 
-    if (move.size != squares.cells.length) {
-        return startingSquares(move.size, move.flip > 0, move.flip > 1);
+    if (event.size != squares.cells.length) {
+        return startingSquares(event.size, event.flip > 0, event.flip > 1);
     }
 
-    let moveFn = moveFunction(move.direction, move.at, move.by, move.size, move.flip > 0, move.flip > 1);
+    let moveFn = moveunction(event.direction, event.at, event.by, event.size, event.flip > 0, event.flip > 1);
     var newCells = new Array();
-    for (let i=0; i<move.size; i++) {
+    for (let i=0; i<event.size; i++) {
         newCells[i] = new Array();
-        for (let j=0; j<move.size; j++) {
+        for (let j=0; j<event.size; j++) {
             newCells[i][j] = copyCell(moveFn(squares.cells, i, j))
         }
     }
-    return {cells : newCells, hflip : squares.hflip, vflip : squares.vflip}
+    return {cells : newCells, hflip : squares.hflip, vflip : squares.vflip, stored : false}
 }
 
 //function dumpSquare(square) {
@@ -150,43 +160,39 @@ function main(sources) {
 
     // TODO unhardcode the image path
 
-    const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).map(file => {return {key : "img", value : file}})
-    const imgStore$ = fromStorage$.img.map(s => {return {key : "img", value : s.value, stored : s.stored}});
+    const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).map(file => {return {key : "img", value : file, stored : false}})
+    const imgStore$ = fromStorage$.img.map(s => {return {key : "img", value : s, stored : true}});
     const img$ = imgStore$.merge(imgSelect$)
 
-    const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "size", value : v}})
-    const sizeStore$ = fromStorage$.size.map(s => {return {key : "size", value : s.value, stored : s.stored}});
-    const size$ = sizeStore$.merge(sizeSelect$)
-
-    const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "flip", value : v}})
-    const flipStore$ = fromStorage$.flip.map(s => {return {key : "flip", value : s.value, stored : s.stored}});
-    const flip$ = flipStore$.merge(flipSelect$)
-
-    const showGridSelect$ = sources.DOM.select("#showGrid-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "showGrid", value : v}})
-    const showGridStore$ = fromStorage$.showGrid.map(file => {return {key : "showGrid", value : s.value, stored : s.stored}});
+    const showGridSelect$ = sources.DOM.select("#showGrid-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "showGrid", value : v, stored : false}})
+    const showGridStore$ = fromStorage$.showGrid.map(s => {return {key : "showGrid", value : s, stored : true}});
     const showGrid$ = showGridStore$.merge(showGridSelect$)
 
-    const reset$ = sources.DOM.select("#reset").events("click").map(v => {return "reset"})
-
-    const squaresStore$ = fromStorage$.squares.map(file => {return {key : "squares", value : s.value, stored : s.stored}});
+    const squaresStore$ = fromStorage$.squares.map(s => {return {key : "squares", value : s, stored : true}});
 
 
-    const starting$ = Rx.Observable.combineLatest(size$, flip$, squaresStore$,
-                                                  function(s, f, sq) {
-                                                      if (sq) {
-                                                          return {
-                                                              cells : sq.value,
-                                                              hflip: f.value > 0,
-                                                              vflip : f.value > 1,
-                                                          }
-                                                      }
-                                                      else {
-                                                          return startingSquares(s.value || 3, f.value > 0, f.value > 1);
-                                                      }
-                                                  });
+    const starting$ = squaresStore$.map(function(sq) {
+                                            return {
+                                                cells : sq.value.cells,
+                                                hflip: sq.value.hflip,
+                                                vflip : sq.value.vflip,
+                                                size : sq.value.size,
+                                                stored : true
+                                            }
+    })
+    .startWith(startingSquares(3, false, false))
 
+    const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).map(val => {return {eventType : "flip", value : val}})
 
-    const squares$ = starting$.flatMap(s => moveDone$.merge(reset$).scan(actOn, s).startWith(s))
+    const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).map(val => {return {eventType : "size", value : val}})
+
+    const reset$ = sources.DOM.select("#reset").events("click").map(v => {return {eventType : "reset"}})
+
+    const squares$ = starting$.flatMap(s => moveDone$
+                                       .merge(reset$)
+                                       .merge(sizeSelect$)
+                                       .merge(flipSelect$)
+                                       .scan(actOn, s).startWith(s))
 
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
@@ -206,9 +212,11 @@ function main(sources) {
     redraw$.subscribe(console.log)
 
     const squaresStorage$ = squares$
-        .map(sq => {return { key : "squares", value : JSON.stringify(sq.cells)}})
+        .map(sq => {return { key : "squares", value : JSON.stringify(sq.value.cells)}})
 
-    const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGridSelect$).merge(squaresStorage$);
+    const toStorage$ = img$.filter(unstored)
+        .merge(showGrid$.filter(unstored))
+        .merge(squaresStorage$.filter(unstored))
 
 
     return {
@@ -230,19 +238,15 @@ window.onload = function() {
 }    
 
 function fromStorage(localStorage) {
-    const storedFlip$ = localStorage.getItem("flip");
-    const storedImg$ = localStorage.getItem("img");
-    const storedShowGrid$ = localStorage.getItem("showGrid");
-    const storedSize$ = localStorage.getItem("size");
+    const storedImg$ = localStorage.getItem("img").startWith("bison.jpg")
+    const storedShowGrid$ = localStorage.getItem("showGrid").startWith("on-press")
     const storedSquares$ = localStorage.getItem("squares").map(JSON.parse)
 
-    const stored$ = Rx.Observable.combineLatest(storedFlip$, storedImg$, storedShowGrid$, storedSize$, storedSquares$,
-                                                function(f, i, sg, sz, sq) {
+    const stored$ = Rx.Observable.combineLatest(storedImg$, storedShowGrid$, storedSquares$,
+                                                function(i, sg, sq) {
                                                     return {
-                                                        flip : f,
                                                         img : i,
                                                         showGrid : sg,
-                                                        size : sz,
                                                         squares : sq
                                                     };
                                                 });
@@ -274,22 +278,21 @@ function fromStorage(localStorage) {
                     h('select', {id : "showGrid-chooser"}, grids.map(grid => h('option', {selected : grid.value === s.showGrid, value : grid.value}, grid.label))),
                    ]),
             h('p', [h('label', {for: "size-chooser"}, "Size"),
-                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {selected : size.value === s.size, value : size.value}, size.label))),
+                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {selected : size.value === s.squares.size, value : size.value}, size.label))),
                    ]),
             h('p', [h('label', {for: "flip-chooser"}, "Flip"),
-                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {selected : flip.value === s.flip, value : flip.value}, flip.label))),
+                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {selected : flip.value === s.squares.flip, value : flip.value}, flip.label))),
                    ]),
             h('p', h('a', {id : "reset", href : "#"}, "Reset"))])
     });
             
     return {DOM : dom$,
-            size : storedSize$.map(stored),
-            flip : storedFlip$.map(stored),
-            squares : storedSquares$.map(stored),
-            showGrid : storedShowGrid$.map(stored),
-            img : storedImg$.map(stored)}
+            squares : storedSquares$,
+            showGrid : storedShowGrid$,
+            img : storedImg$}
 }
 
-function stored(x) {
-    return {stored : true, value : x};
+
+function unstored(x) {
+    return !x.stored;
 }
