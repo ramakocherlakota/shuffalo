@@ -151,32 +151,33 @@ function main(sources) {
     // TODO unhardcode the image path
 
     const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).map(file => {return {key : "img", value : file}})
-    const imgStore$ = fromStorage$.img.map(file => {return {key : "img", value : file}});
+    const imgStore$ = fromStorage$.img.map(s => {return {key : "img", value : s.value, stored : s.stored}});
     const img$ = imgStore$.merge(imgSelect$)
 
     const sizeSelect$ = sources.DOM.select("#size-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "size", value : v}})
-    const sizeStore$ = fromStorage$.size.map(file => {return {key : "size", value : file}})
+    const sizeStore$ = fromStorage$.size.map(s => {return {key : "size", value : s.value, stored : s.stored}});
     const size$ = sizeStore$.merge(sizeSelect$)
 
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "flip", value : v}})
-    const flipStore$ = fromStorage$.flip.map(file => {return {key : "flip", value : file}})
+    const flipStore$ = fromStorage$.flip.map(s => {return {key : "flip", value : s.value, stored : s.stored}});
     const flip$ = flipStore$.merge(flipSelect$)
 
     const showGridSelect$ = sources.DOM.select("#showGrid-chooser").events("change").map(ev => ev.target.value).map(v => {return {key : "showGrid", value : v}})
-    const showGridStore$ = fromStorage$.showGrid.map(file => {return {key : "showGrid", value : file}})
+    const showGridStore$ = fromStorage$.showGrid.map(file => {return {key : "showGrid", value : s.value, stored : s.stored}});
     const showGrid$ = showGridStore$.merge(showGridSelect$)
 
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return "reset"})
 
+    const squaresStore$ = fromStorage$.squares.map(file => {return {key : "squares", value : s.value, stored : s.stored}});
 
-    const starting$ = Rx.Observable.combineLatest(size$, flip$, fromStorage$.squares.first(),
+
+    const starting$ = Rx.Observable.combineLatest(size$, flip$, squaresStore$,
                                                   function(s, f, sq) {
                                                       if (sq) {
                                                           return {
-                                                              cells : sq,
+                                                              cells : sq.value,
                                                               hflip: f.value > 0,
                                                               vflip : f.value > 1,
-                                                              skipSave : true
                                                           }
                                                       }
                                                       else {
@@ -202,10 +203,9 @@ function main(sources) {
                                                     }
                                                 });
 
-//    redraw$.subscribe(console.log)
+    redraw$.subscribe(console.log)
 
     const squaresStorage$ = squares$
-        .filter(sq => {return !sq.skipSave;})
         .map(sq => {return { key : "squares", value : JSON.stringify(sq.cells)}})
 
     const toStorage$ = imgSelect$.merge(sizeSelect$).merge(flipSelect$).merge(showGridSelect$).merge(squaresStorage$);
@@ -283,9 +283,13 @@ function fromStorage(localStorage) {
     });
             
     return {DOM : dom$,
-            size : storedSize$,
-            flip : storedFlip$,
-            squares : storedSquares$,
-            showGrid : storedShowGrid$,
-            img : storedImg$}
+            size : storedSize$.map(stored),
+            flip : storedFlip$.map(stored),
+            squares : storedSquares$.map(stored),
+            showGrid : storedShowGrid$.map(stored),
+            img : storedImg$.map(stored)}
+}
+
+function stored(x) {
+    return {stored : true, value : x};
 }
