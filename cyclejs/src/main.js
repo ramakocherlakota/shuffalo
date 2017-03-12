@@ -170,17 +170,19 @@ function main(sources) {
 
     const squaresStore$ = fromStorage$.squares.map(s => {return {key : "squares", value : s, stored : true}});
 
+    squaresStore$.subscribe(printMe("squaresStore"))
 
     const starting$ = squaresStore$.map(function(sq) {
                                             return {
                                                 cells : sq.value.cells,
                                                 hflip: sq.value.hflip,
                                                 vflip : sq.value.vflip,
-                                                size : sq.value.size,
+                                                size : sq.value.cells.length,
                                                 stored : true
                                             }
     })
-    .startWith(startingSquares(3, false, false))
+
+    starting$.subscribe(printMe("starting"))
 
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).map(val => {return {eventType : "flip", value : val}})
 
@@ -193,6 +195,8 @@ function main(sources) {
                                        .merge(sizeSelect$)
                                        .merge(flipSelect$)
                                        .scan(actOn, s).startWith(s))
+
+    squares$.subscribe(printMe("squares"))
 
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
@@ -209,7 +213,7 @@ function main(sources) {
                                                     }
                                                 });
 
-    redraw$.subscribe(console.log)
+//    redraw$.subscribe(console.log)
 
     const squaresStorage$ = squares$
         .map(sq => {return { key : "squares", value : JSON.stringify(sq.value.cells)}})
@@ -240,7 +244,8 @@ window.onload = function() {
 function fromStorage(localStorage) {
     const storedImg$ = localStorage.getItem("img").startWith("bison.jpg")
     const storedShowGrid$ = localStorage.getItem("showGrid").startWith("on-press")
-    const storedSquares$ = localStorage.getItem("squares").map(JSON.parse)
+    const storedSquares$ = localStorage.getItem("squares").filter(x =>  x !== null).map(JSON.parse).startWith(startingSquares(3, false, false))
+    storedSquares$.subscribe(printMe("storedSquares"))
 
     const stored$ = Rx.Observable.combineLatest(storedImg$, storedShowGrid$, storedSquares$,
                                                 function(i, sg, sq) {
@@ -278,10 +283,10 @@ function fromStorage(localStorage) {
                     h('select', {id : "showGrid-chooser"}, grids.map(grid => h('option', {selected : grid.value === s.showGrid, value : grid.value}, grid.label))),
                    ]),
             h('p', [h('label', {for: "size-chooser"}, "Size"),
-                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {selected : size.value === s.squares.size, value : size.value}, size.label))),
+                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {selected : (s.squares && s.squares.cells && size.value === s.squares.cells.length), value : size.value}, size.label))),
                    ]),
             h('p', [h('label', {for: "flip-chooser"}, "Flip"),
-                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {selected : flip.value === s.squares.flip, value : flip.value}, flip.label))),
+                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {selected : (s.squares && flip.value === (s.squares.hflip + s.squares.vflip)), value : flip.value}, flip.label))),
                    ]),
             h('p', h('a', {id : "reset", href : "#"}, "Reset"))])
     });
@@ -295,4 +300,11 @@ function fromStorage(localStorage) {
 
 function unstored(x) {
     return !x.stored;
+}
+
+function printMe(name) {
+    return function(x) {
+        console.log("printing " + name)
+        console.log(x)
+    }
 }
