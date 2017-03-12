@@ -168,9 +168,7 @@ function main(sources) {
     const showGridStore$ = fromStorage$.showGrid.map(s => {return {key : "showGrid", value : s, stored : true}});
     const showGrid$ = showGridStore$.merge(showGridSelect$)
 
-    const squaresStore$ = fromStorage$.squares.map(s => {return {key : "squares", value : s, stored : true}});
-
-    squaresStore$.subscribe(printMe("squaresStore"))
+    const squaresStore$ = fromStorage$.squares.filter(notnull).map(s => {return {key : "squares", value : s, stored : true}});
 
     const starting$ = squaresStore$.map(function(sq) {
                                             return {
@@ -181,8 +179,6 @@ function main(sources) {
                                                 stored : true
                                             }
     })
-
-    starting$.subscribe(printMe("starting"))
 
     const flipSelect$ = sources.DOM.select("#flip-chooser").events("change").map(ev => ev.target.value).map(val => {return {eventType : "flip", value : val}})
 
@@ -195,8 +191,6 @@ function main(sources) {
                                        .merge(sizeSelect$)
                                        .merge(flipSelect$)
                                        .scan(actOn, s).startWith(s))
-
-    squares$.subscribe(printMe("squares"))
 
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
@@ -216,17 +210,18 @@ function main(sources) {
 //    redraw$.subscribe(console.log)
 
     const squaresStorage$ = squares$
-        .map(sq => {return { key : "squares", value : JSON.stringify(sq.value.cells)}})
+          .map(sq => {return { key : "squares", value : JSON.stringify(sq), stored : sq.stored}})
 
     const toStorage$ = img$.filter(unstored)
         .merge(showGrid$.filter(unstored))
         .merge(squaresStorage$.filter(unstored))
 
+    toStorage$.subscribe(printMe("toStorage"));
 
     return {
         DOM : fromStorage$.DOM,
-	GridDriver : redraw$,
-        storage : toStorage$
+        storage : toStorage$,
+	GridDriver : redraw$
     };
 }
 
@@ -242,10 +237,9 @@ window.onload = function() {
 }    
 
 function fromStorage(localStorage) {
-    const storedImg$ = localStorage.getItem("img").startWith("bison.jpg")
-    const storedShowGrid$ = localStorage.getItem("showGrid").startWith("on-press")
-    const storedSquares$ = localStorage.getItem("squares").filter(x =>  x !== null).map(JSON.parse).startWith(startingSquares(3, false, false))
-    storedSquares$.subscribe(printMe("storedSquares"))
+    const storedImg$ = localStorage.getItem("img").filter(notnull).startWith("bison.jpg")
+    const storedShowGrid$ = localStorage.getItem("showGrid").filter(notnull).startWith("on-press")
+    const storedSquares$ = localStorage.getItem("squares").filter(notnull).map(JSON.parse).startWith(startingSquares(3, false, false))
 
     const stored$ = Rx.Observable.combineLatest(storedImg$, storedShowGrid$, storedSquares$,
                                                 function(i, sg, sq) {
@@ -307,4 +301,8 @@ function printMe(name) {
         console.log("printing " + name)
         console.log(x)
     }
+}
+
+function notnull(x) {
+    return x !== null;
 }
