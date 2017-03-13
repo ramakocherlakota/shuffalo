@@ -249,9 +249,6 @@ function fromStorage(localStorage) {
                                                 });
     
 
-    stored$.subscribe(printMe("stored in loader"))
-
-
     const jpgs = Array('bison.jpg', 'candyshop.jpg', 'carousel.jpg', 'clematis.jpg', 'epices.jpg', 'freycinet.jpg', 'hands_with_shells.jpg', 'jellyfish.jpg', 'log_and_fungi.jpg', 'puppy_and_dog.jpg', 'tidepool.jpg')
     
     const grids = Array({value : "on-press", label: "On Press"},
@@ -266,7 +263,8 @@ function fromStorage(localStorage) {
                         {value : "1", label: "One"},
                         {value : "2", label: "Two"});
 
-   
+    stored$.subscribe(printMe("stored in loader"))
+
     const dom$ = stored$.map(s => {
         return h('div', [
             h('p', [h('label', {for : "image-chooser"}, "Image"),
@@ -277,10 +275,10 @@ function fromStorage(localStorage) {
                     h('select', {id : "showGrid-chooser"}, grids.map(grid => h('option', {selected : grid.value === s.showGrid, value : grid.value}, grid.label))),
                    ]),
             h('p', [h('label', {for: "size-chooser"}, "Size"),
-                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {selected : (s.squares && s.squares.cells && (size.value === s.squares.cells.length)), value : size.value}, size.label))),
+                    h('select', {id : "size-chooser"}, sizes.map(size => h('option', {selected : size.value ==  s.squares.cells.length, value : size.value}, size.label))),
                    ]),
             h('p', [h('label', {for: "flip-chooser"}, "Flip"),
-                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {selected : (s.squares && flip.value === (s.squares.hflip + s.squares.vflip)), value : flip.value}, flip.label))),
+                    h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {selected : flip.value == (s.squares.hflip + s.squares.vflip), value : flip.value}, flip.label))),
                    ]),
             h('p', h('a', {id : "reset", href : "#"}, "Reset"))])
     });
@@ -301,6 +299,3 @@ function printMe(name) {
     }
 }
 
-function notnull(x) {
-    return x !== null;
-}
