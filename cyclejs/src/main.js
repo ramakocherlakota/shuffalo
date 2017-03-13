@@ -207,7 +207,7 @@ function main(sources) {
                                                     }
                                                 });
 
-//    redraw$.subscribe(console.log)
+    redraw$.subscribe(printMe("redraw"))
 
     const squaresStorage$ = squares$
           .map(sq => {return { key : "squares", value : JSON.stringify(sq), stored : sq.stored}})
@@ -237,19 +237,21 @@ window.onload = function() {
 }    
 
 function fromStorage(localStorage) {
-    const storedImg$ = localStorage.getItem("img").filter(notnull).startWith("bison.jpg")
-    const storedShowGrid$ = localStorage.getItem("showGrid").filter(notnull).startWith("on-press")
+    const storedImg$ = localStorage.getItem("img")
+    const storedShowGrid$ = localStorage.getItem("showGrid")
     const storedSquares$ = localStorage.getItem("squares").filter(notnull).map(JSON.parse).startWith(startingSquares(3, false, false))
 
     const stored$ = Rx.Observable.combineLatest(storedImg$, storedShowGrid$, storedSquares$,
                                                 function(i, sg, sq) {
                                                     return {
-                                                        img : i,
-                                                        showGrid : sg,
+                                                        img : i || "bison.jpg",
+                                                        showGrid : sg || "on-press",
                                                         squares : sq
                                                     };
                                                 });
     
+
+    stored$.subscribe(printMe("stored in loader"))
 
 
     const jpgs = Array('bison.jpg', 'candyshop.jpg', 'carousel.jpg', 'clematis.jpg', 'epices.jpg', 'freycinet.jpg', 'hands_with_shells.jpg', 'jellyfish.jpg', 'log_and_fungi.jpg', 'puppy_and_dog.jpg', 'tidepool.jpg')
