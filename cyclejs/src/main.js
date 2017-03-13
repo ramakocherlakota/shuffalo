@@ -12,7 +12,7 @@ function startingSquares(n, hflip, vflip) {
     for (var i=0; i<n; i++) {
         array[i] = new Array();
         for (var j=0; j<n; j++) {
-            array[i][j] = {row : i, col : j, hflip : false, size : n, vflip : false};
+            array[i][j] = {row : i, col : j, hflip : false, vflip : false};
         }
     }
     return {cells : array, hflip : hflip, vflip : vflip, stored : false};
