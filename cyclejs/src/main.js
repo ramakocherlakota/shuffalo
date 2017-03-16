@@ -205,7 +205,7 @@ function main(sources) {
                                                     }
                                                 });
 
-    redraw$.subscribe(printMe("redraw"))
+//    redraw$.subscribe(printMe("redraw"))
 
     const squaresStorage$ = squares$
           .map(sq => {return { key : "squares", value : JSON.stringify(sq), stored : sq.stored}})
@@ -214,7 +214,7 @@ function main(sources) {
         .merge(showGrid$.filter(unstored))
         .merge(squaresStorage$.filter(unstored))
 
-    toStorage$.subscribe(printMe("toStorage"));
+//    toStorage$.subscribe(printMe("toStorage"));
 
     return {
         DOM : fromStorage$.DOM,
@@ -249,7 +249,17 @@ function fromStorage(localStorage) {
                                                 });
     
 
-    const jpgs = Array('bison.jpg', 'candyshop.jpg', 'carousel.jpg', 'clematis.jpg', 'epices.jpg', 'freycinet.jpg', 'hands_with_shells.jpg', 'jellyfish.jpg', 'log_and_fungi.jpg', 'puppy_and_dog.jpg', 'tidepool.jpg')
+    const jpgs = Array({value : 'bison.jpg', label : 'Bison'},
+                       {value : 'candyshop.jpg', label : 'Candy Shop'},
+                       {value : 'carousel.jpg', label : 'Carousel'},
+                       {value : 'clematis.jpg', label : 'Clematis'},
+                       {value : 'epices.jpg', label : 'Spices'},
+                       {value : 'freycinet.jpg', label : 'Freycinet'},
+                       {value : 'hands_with_shells.jpg', label : 'Shells'},
+                       {value : 'jellyfish.jpg', label : 'Jellyfish'},
+                       {value : 'log_and_fungi.jpg', label : 'Log'},
+                       {value : 'puppy_and_dog.jpg', label : 'Dogs'},
+                       {value : 'tidepool.jpg', label : 'Tidepool'});
     
     const grids = Array({value : "on-press", label: "On Press"},
                         {value : "never", label: "Never"},
@@ -263,13 +273,11 @@ function fromStorage(localStorage) {
                         {value : "1", label: "One"},
                         {value : "2", label: "Two"});
 
-    stored$.subscribe(printMe("stored in loader"))
-
     const dom$ = stored$.map(s => {
         return h('div', [
             h('p', [h('label', {for : "image-chooser"}, "Image"),
-                    h('select', {id : "image-chooser"}, jpgs.map(jpg => h('option', {selected : jpg === s.img}, 
-                                                                          jpg))),
+                    h('select', {id : "image-chooser"}, jpgs.map(jpg => h('option', {selected : jpg.value === s.img, value : jpg.value}, 
+                                                                          jpg.label))),
                    ]),
             h('p', [h('label', {for: "showGrid-chooser"}, "Grid"),
                     h('select', {id : "showGrid-chooser"}, grids.map(grid => h('option', {selected : grid.value === s.showGrid, value : grid.value}, grid.label))),

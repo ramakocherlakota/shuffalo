@@ -211,7 +211,7 @@ function redraw(event, canvas) {
     }
 
     var img = new Image();
-    img.src = "file:///Users/rama/work/shuffalo/cyclejs/img/large/" + (event.imageFile || "bison.jpg")
+    img.src = "./dist/img/" + event.imageFile
     img.onload = function() {
         var deltaWidth = canvasWidth / size;
         var deltaHeight = canvasHeight / size;
