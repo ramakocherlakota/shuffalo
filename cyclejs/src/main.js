@@ -190,6 +190,7 @@ function main(sources) {
                                        .merge(flipSelect$)
                                        .scan(actOn, s).startWith(s))
 
+
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
                                                     return {
@@ -205,7 +206,7 @@ function main(sources) {
                                                     }
                                                 });
 
-//    redraw$.subscribe(printMe("redraw"))
+    redraw$.subscribe(printMe("redraw"))
 
     const squaresStorage$ = squares$
           .map(sq => {return { key : "squares", value : JSON.stringify(sq), stored : sq.stored}})

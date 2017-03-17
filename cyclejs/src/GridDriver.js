@@ -26,7 +26,13 @@ function dumpSquares(squares) {
 var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
 
+const slidingTimeMs = 100
+const slidingFrames = 10
+
+
 function makeGridDriver(canvasElt) {
+    const ticker$ = Rx.Observable.interval(slidingTimeMs / slidingFrames)
+
     return function(source$) {
         var canvas = typeof canvasElt === `string` ?
 	    document.querySelector(canvasElt) :
@@ -41,7 +47,7 @@ function makeGridDriver(canvasElt) {
             .subscribe(event => dragMouse(event, canvas))
 
         mouseTracker$.filter(evt => evt.eventType === "finishDrag")
-            .subscribe(event => finishDrag(event, canvas))
+            .subscribe(event => finishDrag(event, canvas, ticker$))
 
 	return mouseTracker$.filter(evt => evt.eventType === "moveDone")
     }    
@@ -69,14 +75,12 @@ function canvasWidthOrHeight(direction, canvas) {
     }
 }
 
-const slidingTimeMs = 100
-const slidingFrames = 10
 
-function finishDrag(p, canvas) {
+function finishDrag(p, canvas, ticker$) {
     var byCells = findByCells(p.direction, p.by, p.size, canvas);
     var delta = byCells * canvasWidthOrHeight(p.direction, canvas) / p.size  - p.by;
 
-    Rx.Observable.interval(slidingTimeMs / slidingFrames).take(slidingFrames)
+    ticker$.take(slidingFrames)
         .forEach(n => {
             dragMouse({showGrid : p.showGrid,
                        direction : p.direction,
@@ -85,6 +89,14 @@ function finishDrag(p, canvas) {
                        flip : p.flip,
                        by : p.by + delta * n / slidingFrames},
                       canvas)})
+
+    dragMouse({showGrid : p.showGrid,
+               direction : p.direction,
+               at : p.at,
+               size : p.size,
+               flip : p.flip,
+               by : p.by},
+              canvas)
 }
 
 function dragMouse(event, canvas) {
