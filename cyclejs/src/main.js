@@ -184,11 +184,11 @@ function main(sources) {
 
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return {eventType : "reset"}})
 
-    const squares$ = starting$.flatMap(s => moveDone$
-                                       .merge(reset$)
-                                       .merge(sizeSelect$)
-                                       .merge(flipSelect$)
-                                       .scan(actOn, s).startWith(s))
+    const squares$ = starting$.first().flatMap(s => moveDone$
+                                               .merge(reset$)
+                                               .merge(sizeSelect$)
+                                               .merge(flipSelect$)
+                                               .scan(actOn, s).startWith(s))
 
 
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
@@ -206,7 +206,6 @@ function main(sources) {
                                                     }
                                                 });
 
-    redraw$.subscribe(logRedraw)
 
     const squaresStorage$ = squares$
           .map(sq => {return { key : "squares", value : JSON.stringify(sq), stored : sq.stored}})
@@ -308,7 +307,12 @@ function printMe(name) {
     }
 }
 
-var redrawCount = 0;
-function logRedraw() {
-    console.log("redraw : " + redrawCount++)
+var counts = {};
+function logCount(name) {
+    return function() {
+        if (!counts[name]) {
+            counts[name] = 0;
+        }
+        console.log(name +  " : " + counts[name]++)
+    }
 }
