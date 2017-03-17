@@ -206,7 +206,7 @@ function main(sources) {
                                                     }
                                                 });
 
-    redraw$.subscribe(printMe("redraw"))
+    redraw$.subscribe(logRedraw)
 
     const squaresStorage$ = squares$
           .map(sq => {return { key : "squares", value : JSON.stringify(sq), stored : sq.stored}})
@@ -308,3 +308,7 @@ function printMe(name) {
     }
 }
 
+var redrawCount = 0;
+function logRedraw() {
+    console.log("redraw : " + redrawCount++)
+}
