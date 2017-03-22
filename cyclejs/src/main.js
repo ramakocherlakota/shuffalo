@@ -184,6 +184,11 @@ function main(sources) {
 
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return {eventType : "reset"}})
 
+    const executeScript$ = sources.DOM.select("#execute-script").events("keyup").map(e => {script : e.target.value});
+    const execute$ = sources.DOM.select("#execute").events("click").map(e => {eventType : "execute"})
+    const doExecute$ = execute$.flatMap(s => executeScript$)
+    execute$.subscribe(console.log)
+
     const squares$ = starting$.first().flatMap(s => moveDone$
                                                .merge(reset$)
                                                .merge(sizeSelect$)
@@ -288,7 +293,10 @@ function fromStorage(localStorage) {
             h('p', [h('label', {for: "flip-chooser"}, "Flip"),
                     h('select', {id : "flip-chooser"}, flips.map(flip => h('option', {selected : flip.value == (s.squares.hflip + s.squares.vflip), value : flip.value}, flip.label))),
                    ]),
-            h('p', h('a', {id : "reset", href : "#"}, "Reset"))])
+            h('p', h('a', {id : "reset", href : "#"}, "Reset")),
+            h('p', h('input', {id : "execute-script"})),
+            h('p', h('a', {id : "execute", href : "#"}, "Execute")),
+        ])
     });
             
     return {DOM : dom$,
