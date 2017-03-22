@@ -256,7 +256,7 @@ function fromStorage(localStorage) {
                                                     return {
                                                         img : i || "bison.jpg",
                                                         showGrid : sg || "on-press",
-                                                        squares : (sq && JSON.parse(sq)) || startingSquares(3, false, false)
+                                                        squares : (sq && parse_json(sq)) || startingSquares(3, false, false)
                                                     };
                                                 });
     
@@ -329,5 +329,14 @@ function logCount(name) {
             counts[name] = 0;
         }
         console.log(name +  " : " + counts[name]++)
+    }
+}
+
+function parse_json(string) {
+    try {
+        return JSON.parse(string)
+    }
+    catch(e) {
+        return null
     }
 }
