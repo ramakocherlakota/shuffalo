@@ -184,9 +184,16 @@ function main(sources) {
 
     const reset$ = sources.DOM.select("#reset").events("click").map(v => {return {eventType : "reset"}})
 
-    const executeScript$ = sources.DOM.select("#execute-script").events("keyup").map(e => {script : e.target.value});
-    const execute$ = sources.DOM.select("#execute").events("click").map(e => {eventType : "execute"})
-    const doExecute$ = execute$.flatMap(s => executeScript$)
+    const executeScript$ = sources.DOM.select("#execute-script").events("keyup").map(e => e.target.value);
+    const executeButton$ = sources.DOM.select("#execute").events("click")
+    const execute$ = Rx.Observable
+        .combineLatest(executeButton$, executeScript$,
+                       function(c, t) {
+                           return {click : c, script : t}
+                       })
+        .distinctUntilChanged(e => e.click.timeStamp)
+        .map(e => e.script)
+
     execute$.subscribe(console.log)
 
     const squares$ = starting$.first().flatMap(s => moveDone$
