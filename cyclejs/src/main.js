@@ -103,6 +103,15 @@ function copyCell(cell) {
 }
 
 function actOn(squares, event) {
+    if (Array.isArray(event)) {
+        if (event.length == 0) {
+            return squares;
+        }
+        else {
+            return actOn(actOn(squares, event[0]), event.slice(1))
+        }
+    }
+
     if (event.eventType === "reset") {
         return startingSquares(squares.cells.length, squares.hflip, squares.vflip);
     }
@@ -192,16 +201,19 @@ function main(sources) {
                            return {click : c, script : t}
                        })
         .distinctUntilChanged(e => e.click.timeStamp)
-        .map(e => e.script)
+        .map(e => parse_json(e.script))
+        .filter(notnull)
 
-    execute$.subscribe(console.log)
+    moveDone$.subscribe(console.log)
 
     const squares$ = starting$.first().flatMap(s => moveDone$
+                                               .merge(execute$)
                                                .merge(reset$)
                                                .merge(sizeSelect$)
                                                .merge(flipSelect$)
                                                .scan(actOn, s).startWith(s))
 
+    squares$.subscribe(console.log)
 
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
@@ -332,11 +344,16 @@ function logCount(name) {
     }
 }
 
-function parse_json(string) {
+function parse_json(jsonstr) {
     try {
-        return JSON.parse(string)
+        return JSON.parse(jsonstr)
     }
     catch(e) {
+        console.log("Exception " + e + "\nwhile parsing json " + jsonstr)
         return null
     }
+}
+
+function notnull(x) {
+    return x !== null
 }
