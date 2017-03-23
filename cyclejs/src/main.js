@@ -204,7 +204,7 @@ function main(sources) {
         .map(e => parse_json(e.script))
         .filter(notnull)
 
-    moveDone$.subscribe(console.log)
+//    moveDone$.subscribe(console.log)
 
     const squares$ = starting$.first().flatMap(s => moveDone$
                                                .merge(execute$)
@@ -213,7 +213,7 @@ function main(sources) {
                                                .merge(flipSelect$)
                                                .scan(actOn, s).startWith(s))
 
-    squares$.subscribe(console.log)
+//    squares$.subscribe(console.log)
 
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
