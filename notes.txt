@@ -1,4 +1,9 @@
 TODO
+- safari issue
+  - drag from 0, 0 to 0, 1
+    - sometimes it snaps to the wrong image
+      - sometimes it shows the grid after snapping even if on-press is selected
+
 - saving is not right
   - saving list of [Object] instead of actual squares
   - undefined = undefined for some reason
