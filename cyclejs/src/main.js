@@ -158,8 +158,6 @@ function main(sources) {
     const gridDriver = sources.GridDriver;
     const moveDone$ = gridDriver.filter(evt => evt.eventType === "moveDone")
 
-    // TODO unhardcode the image path
-
     const imgSelect$ = sources.DOM.select("#image-chooser").events("change").map(ev => ev.target.value).map(file => {return {key : "img", value : file, stored : false}})
     const imgStore$ = fromStorage$.stored.map(s => {return {key : "img", value : s.img, stored : true}});
     const img$ = imgStore$.merge(imgSelect$)
