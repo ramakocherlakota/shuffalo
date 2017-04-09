@@ -77,30 +77,26 @@ function canvasWidthOrHeight(direction, canvas) {
 
 
 function finishDrag(p, canvas, ticker$) {
-    var byCells = findByCells(p.direction, p.by, p.size, canvas);
-    var delta = byCells * canvasWidthOrHeight(p.direction, canvas) / p.size  - p.by;
+    if (p.by != 0) {
+        var byCells = findByCells(p.direction, p.by, p.size, canvas);
+        var delta = byCells * canvasWidthOrHeight(p.direction, canvas) / p.size  - p.by;
 
-    ticker$.take(slidingFrames)
-        .forEach(n => {
-            dragMouse({showGrid : p.showGrid,
-                       direction : p.direction,
-                       at : p.at,
-                       size : p.size,
-                       flip : p.flip,
-                       by : p.by + delta * n / slidingFrames},
-                      canvas)})
-
-    dragMouse({showGrid : p.showGrid,
-               direction : p.direction,
-               at : p.at,
-               size : p.size,
-               flip : p.flip,
-               by : p.by},
-              canvas)
+        ticker$.take(slidingFrames + 1)
+            .forEach(n => {
+                dragMouse({showGrid : p.showGrid,
+                           direction : p.direction,
+                           at : p.at,
+                           lastFrame : n == slidingFrames,
+                           size : p.size,
+                           flip : p.flip,
+                           by : p.by + delta * (n / slidingFrames)},
+                          canvas)})
+    }
 }
 
 function dragMouse(event, canvas) {
-    var sourceCanvas = (event.showGrid === 'never') ? 
+    var sourceCanvas = ((event.showGrid === 'never') || 
+                        (event.lastFrame && event.showGrid == "on-press")) ? 
         oCanvas :
         oCanvasGrid;
 
@@ -114,27 +110,29 @@ function dragMouse(event, canvas) {
 
         var by =  (event.by % sourceCanvas.width) + (event.by < 0 ? sourceCanvas.width : 0)
 
-//        console.log(event.by + " => " + by)
-
         ctx.drawImage(sourceCanvas, 
                       0, cellTop, sourceCanvas.width - by, cellHeight,
                       by, cellTop, sourceCanvas.width - by, cellHeight);
-        
-        ctx.drawImage(sourceCanvas, 
-                      sourceCanvas.width - by, cellTop, by, cellHeight,
-                      0, cellTop, by, cellHeight);
+            
 
+        if (by != 0) {
+            ctx.drawImage(sourceCanvas, 
+                          sourceCanvas.width - by, cellTop, by, cellHeight,
+                          0, cellTop, by, cellHeight);
+        }
+        
         if (event.flip > 0 && rowOrColumn != (event.size - 1) / 2) {
             cellTop = Math.floor((event.size - 1 - rowOrColumn) * canvas.height / event.size);
             ctx.drawImage(sourceCanvas, 
                           0, cellTop, sourceCanvas.width - by, cellHeight,
                           by, cellTop, sourceCanvas.width - by, cellHeight);
-            
-            ctx.drawImage(sourceCanvas, 
-                          sourceCanvas.width - by, cellTop, by, cellHeight,
-                          0, cellTop, by, cellHeight);
-        }
 
+            if (by != 0) {
+                ctx.drawImage(sourceCanvas, 
+                              sourceCanvas.width - by, cellTop, by, cellHeight,
+                              0, cellTop, by, cellHeight);
+            }
+        }
     }
     else {
         var cellLeft = Math.floor(rowOrColumn * canvas.width / event.size);
@@ -146,22 +144,26 @@ function dragMouse(event, canvas) {
                       cellLeft, 0, cellWidth, sourceCanvas.height - by,
                       cellLeft, by, cellWidth, sourceCanvas.height - by);
         
-        ctx.drawImage(sourceCanvas, 
-                      cellLeft, sourceCanvas.height - by, cellWidth, by,
-                      cellLeft, 0, cellWidth, by);
-
-
+        if (by != 0) {
+            ctx.drawImage(sourceCanvas, 
+                          cellLeft, sourceCanvas.height - by, cellWidth, by,
+                          cellLeft, 0, cellWidth, by);
+        }
+        
+        
         if (event.flip > 1 && rowOrColumn != (event.size - 1) / 2) {
             cellLeft = Math.floor((event.size - 1 - rowOrColumn) * canvas.width / event.size);
             ctx.drawImage(sourceCanvas, 
                           cellLeft, 0, cellWidth, sourceCanvas.height - by,
                           cellLeft, by, cellWidth, sourceCanvas.height - by);
             
-            ctx.drawImage(sourceCanvas, 
-                          cellLeft, sourceCanvas.height - by, cellWidth, by,
-                          cellLeft, 0, cellWidth, by);
+            if (by != 0) {
+                ctx.drawImage(sourceCanvas, 
+                              cellLeft, sourceCanvas.height - by, cellWidth, by,
+                              cellLeft, 0, cellWidth, by);
+            }
         }
-    }
+    } 
 }
 
 function showLines(canvas) {
@@ -367,7 +369,7 @@ function makeMouseTracker(canvas, source$) {
 	    })
 
 
-	return movesUntilDone$.merge(finishDrag$).merge(moveDone$.delay(slidingTimeMs))
+	return movesUntilDone$.merge(finishDrag$).merge(moveDone$.delay(slidingTimeMs + (2 * slidingTimeMs) / slidingFrames))
     });
 
     return dragger$;

@@ -1,5 +1,8 @@
 TODO
+<<<<<<< HEAD
 - bug in safari?
+=======
+>>>>>>> master
 - paste json to actOn
 - shuffling (need some math to handle)
 - bootstrap
