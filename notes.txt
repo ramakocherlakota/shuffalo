@@ -1,18 +1,4 @@
 TODO
-- safari issue
-  - simple drag by one cell the last frame is drawn wrong
-  - maybe problem is that oCanvas and oCanvasGrid are getting redrawn too early so we're copying from the incorrect image in dragMouse
-
-- saving is not right
-  - saving list of [Object] instead of actual squares
-  - undefined = undefined for some reason
-
-- reset to home position
-  - verify that reset is getting transmitted to save
-
-- handle load from localstorage
-  - use the DOM methods instead of hardcoding html
-
 - paste json to actOn
 - shuffling (need some math to handle)
 - bootstrap
