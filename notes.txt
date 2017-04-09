@@ -1,12 +1,6 @@
 TODO
 - safari issue
-  - drag from 0, 0 to 0, 1
-    - sometimes it snaps to the wrong image
-      - sometimes it shows the grid after snapping even if on-press is selected
-  - if you do a very small horz drag the grid shows after snapping
-    - but not if you have a subscribe(printMe) on redraw$
-    - but do(printMe) doesn't eliminate the problem
-    - odd - srcWidth is not the same as dstWidth
+  - simple drag by one cell the last frame is drawn wrong
 
 - saving is not right
   - saving list of [Object] instead of actual squares

@@ -26,7 +26,7 @@ function dumpSquares(squares) {
 var oCanvas = null; // without grid lines
 var oCanvasGrid = null; // with grid lines
 
-const slidingTimeMs = 100
+const slidingTimeMs = 1000
 const slidingFrames = 10
 
 
@@ -81,7 +81,7 @@ function finishDrag(p, canvas, ticker$) {
         var byCells = findByCells(p.direction, p.by, p.size, canvas);
         var delta = byCells * canvasWidthOrHeight(p.direction, canvas) / p.size  - p.by;
         
-        ticker$.take(slidingFrames+1)
+        ticker$.take(slidingFrames + 1)
             .forEach(n => {
                 dragMouse({showGrid : p.showGrid,
                            direction : p.direction,
@@ -89,7 +89,7 @@ function finishDrag(p, canvas, ticker$) {
                            lastDrag : n == slidingFrames,
                            size : p.size,
                            flip : p.flip,
-                           by : p.by + delta * n / slidingFrames},
+                           by : p.by + delta * (n / slidingFrames)},
                           canvas)})
     }
 }
