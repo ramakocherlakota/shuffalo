@@ -86,6 +86,7 @@ function finishDrag(p, canvas, ticker$) {
                 dragMouse({showGrid : p.showGrid,
                            direction : p.direction,
                            at : p.at,
+                           dragCanvas : p.dragCanvas,
                            lastFrame : n == slidingFrames,
                            size : p.size,
                            flip : p.flip,
@@ -95,10 +96,7 @@ function finishDrag(p, canvas, ticker$) {
 }
 
 function dragMouse(event, canvas) {
-    var sourceCanvas = ((event.showGrid === 'never') || 
-                        (event.lastFrame && event.showGrid == "on-press")) ? 
-        oCanvas :
-        oCanvasGrid;
+    var sourceCanvas = event.dragCanvas;
 
     var rowOrColumn = findRowOrColumn(event.direction, event.at, event.size, canvas);
 
@@ -310,6 +308,10 @@ function makeMouseTracker(canvas, source$) {
     
     const dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
+
+	var dragCanvas = document.createElement("canvas");
+	dragCanvas.width = canvas.width * 2;
+	dragCanvas.height = canvas.height * 2;
         
 	var mouseMove$ =  Rx.DOM.mousemove(document)
 	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
@@ -336,7 +338,16 @@ function makeMouseTracker(canvas, source$) {
 	};
         
 	const makeOutput = function(p, hv, sz, sg, fl) {
-	    return {eventType: "move", showGrid : sg, size : sz, direction : hv, flip : fl, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
+	    var dragctx = dragCanvas.getContext("2d");
+
+            if (sg == 'never') {
+	        dragctx.drawImage(oCanvas, 0, 0);
+            }
+            else {
+	        dragctx.drawImage(oCanvasGrid, 0, 0);
+            }
+            
+	    return {eventType: "move", dragCanvas : dragCanvas, showGrid : sg, size : sz, direction : hv, flip : fl, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
 	}
         
 	const movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, flip$, makeOutput);
@@ -351,6 +362,7 @@ function makeMouseTracker(canvas, source$) {
                 at : p.at,
                 size : p.size,
                 flip : p.flip,
+                dragCanvas : dragCanvas,
                 showGrid : p.showGrid
 	    };
 	});
