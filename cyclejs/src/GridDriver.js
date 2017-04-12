@@ -29,6 +29,9 @@ var oCanvasGrid = null; // with grid lines
 const slidingTimeMs = 100
 const slidingFrames = 10
 
+function is_touch_device() {
+  return 'ontouchstart' in window;
+}
 
 function makeGridDriver(canvasElt) {
     const ticker$ = Rx.Observable.interval(slidingTimeMs / slidingFrames)
@@ -38,7 +41,7 @@ function makeGridDriver(canvasElt) {
 	    document.querySelector(canvasElt) :
 	    canvasElt
 
-        const mouseTracker$ = makeMouseTracker(canvas, source$);
+        const mouseTracker$ = makeMouseTracker(canvas, source$, is_touch_device());
 
 	source$.filter(event => event.eventType === "redraw")
 	    .subscribe(event => redraw(event, canvas))
@@ -290,7 +293,7 @@ function redraw(event, canvas) {
 
 }
 
-function makeMouseTracker(canvas, source$) {
+function makeMouseTracker(canvas, source$, isTouch) {
     const showGrid$ = source$.filter(event => event.eventType === "redraw").pluck("showGrid")
     const size$ = source$.filter(event => event.eventType === "redraw").pluck("size")
     const flip$ = source$.filter(event => event.eventType === "redraw").pluck("flip")
@@ -300,24 +303,21 @@ function makeMouseTracker(canvas, source$) {
     const down$ = mouseDown$.map(function (md) {
 	md.preventDefault();
 	
-	return {eventType: "down", x : md.clientX, y : md.clientY};
+	return {eventType: "down", clientX : md.clientX, clientY : md.clientY, offsetX : md.offsetX, offsetY : md.offsetY}
     });
     
     down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
         .subscribe(sg => {if (sg) {showLines(canvas);}})
     
-    const dragger$ = mouseDown$.flatMap(function (md) {
-	md.preventDefault();
-
+    const dragger$ = down$.flatMap(function (md) {
 	var dragCanvas = document.createElement("canvas");
 	dragCanvas.width = canvas.width * 2;
 	dragCanvas.height = canvas.height * 2;
-        
+
 	var mouseMove$ =  Rx.DOM.mousemove(document)
 	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
 	    .filter(function(p) {return p.x != p.y;});
 
-	
 	var firstDirection$ = mouseMove$.map(function(p) {
 	    if (Math.abs(p.x) > Math.abs(p.y)) {
 		return "horz";
@@ -385,6 +385,13 @@ function makeMouseTracker(canvas, source$) {
     });
 
     return dragger$;
+}
+
+function printMe(name) {
+    return function(x) {
+        console.log("printing " + name)
+        console.log(x)
+    }
 }
 
 module.exports = GridDriver
