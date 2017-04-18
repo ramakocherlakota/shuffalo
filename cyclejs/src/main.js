@@ -189,11 +189,15 @@ function main(sources) {
                                                .scan(actOn, s).startWith(s))
 
 
+    let canvas = document.getElementById("canvas")
+
     const redraw$ = Rx.Observable.combineLatest(img$, showGrid$, squares$, 
                                                 function(i, sg, squares) {
                                                     return {
                                                         eventType :"redraw", 
                                                         canvasId : "canvas",
+                                                        canvasWidth : canvas.width,
+                                                        canvasHeight : canvas.height,
                                                         size : squares.cells.length || 3,
                                                         imageFile : i.value,
                                                         flip : (squares.hflip ? 1 : 0) + (squares.vflip ? 1 : 0),

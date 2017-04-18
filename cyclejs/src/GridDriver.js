@@ -38,16 +38,48 @@ function makeGridDriver(canvasElt) {
 	    document.querySelector(canvasElt) :
 	    canvasElt
 
+        // redraw events from source$
+	const redrawOffscreen$ = source$.filter(event => event.eventType === "redraw").map(redrawOffscreen)
+
         const mouseTracker$ = makeMouseTracker(canvas, source$);
+        const mouseDown$ = mouseTracker$.filter(evt => evt.eventType === "down")
+        const mouseMove$ = mouseTracker$.filter(evt => evt.eventType === "move")
+        const mouseUp$ = mouseTracker$.filter(evt => evt.eventType === "finishDrag")
 
-	source$.filter(event => event.eventType === "redraw")
-	    .subscribe(event => redraw(event, canvas))
+        let offscreenCanvases$ = redrawOffscreen$.map(function(offscreen) {
+            return {
+                targetCanvas : canvas,
+                sourceCanvas : offscreen.showGrid === "always" ? offscreen.canvasPlain : offscreen.canvasGrid,
+            }
+        })
+        let imgLoad$ = redrawOffscreen$.flatMap(offscreen => offscreen.imgLoad)
+        imgLoad$.withLatestFrom(offscreenCanvases$, function(img, canvases) {
+            return canvases
+        })
+        .subscribe(drawOnscreen)
 
-        mouseTracker$.filter(evt => evt.eventType === "move")
-            .subscribe(event => dragMouse(event, canvas))
+        mouseMove$.withLatestFrom(redrawOffscreen$, function(move, offscreen) {
+            return {
+                targetCanvas : canvas,
+                sourceCanvas : move.showGrid === "never" ? offscreen.plainCanvas : offscreen.gridCanvas,
+                direction : move.direction,
+                at : move.at,
+                size : move.size
+            }
+        })
+        .subscribe(dragMouse)
 
-        mouseTracker$.filter(evt => evt.eventType === "finishDrag")
-            .subscribe(event => finishDrag(event, canvas, ticker$))
+        mouseUp$.combineLatest(redrawOffscreen$, function(up, offscreen) {
+            return {
+                ticker : ticker$,
+                targetCanvas : canvas,
+                sourceCanvas : move.showGrid === "never" ? offscreen.plainCanvas : offscreen.gridCanvas,
+                direction : move.direction,
+                at : move.at,
+                size : move.size
+            }
+        })
+        .subscribe(finishDrag)
 
 	return mouseTracker$.filter(evt => evt.eventType === "moveDone")
     }    
@@ -76,7 +108,8 @@ function canvasWidthOrHeight(direction, canvas) {
 }
 
 
-function finishDrag(p, canvas, ticker$) {
+function finishDrag(p, ticker$) {
+    var canvas = p.targetCanvas;
     if (p.by != 0) {
         var byCells = findByCells(p.direction, p.by, p.size, canvas);
         var delta = byCells * canvasWidthOrHeight(p.direction, canvas) / p.size  - p.by;
@@ -86,7 +119,7 @@ function finishDrag(p, canvas, ticker$) {
                 dragMouse({showGrid : p.showGrid,
                            direction : p.direction,
                            at : p.at,
-                           dragCanvas : p.dragCanvas,
+                           sourceCanvas : p.sourceCanvas,
                            lastFrame : n == slidingFrames,
                            size : p.size,
                            flip : p.flip,
@@ -95,16 +128,17 @@ function finishDrag(p, canvas, ticker$) {
     }
 }
 
-function dragMouse(event, canvas) {
-    var sourceCanvas = event.dragCanvas;
+function dragMouse(event) {
+    var sourceCanvas = event.sourceCanvas;
+    var targetCanvas = event.targetCanvas;
 
-    var rowOrColumn = findRowOrColumn(event.direction, event.at, event.size, canvas);
+    var rowOrColumn = findRowOrColumn(event.direction, event.at, event.size, targetCanvas);
 
-    var ctx = canvas.getContext("2d");
+    var ctx = targetCanvas.getContext("2d");
 
     if (event.direction === 'horz') {
-        var cellTop = Math.floor(rowOrColumn * canvas.height / event.size);
-        var cellHeight = Math.floor(canvas.height / event.size);
+        var cellTop = Math.floor(rowOrColumn * targetCanvas.height / event.size);
+        var cellHeight = Math.floor(targetCanvas.height / event.size);
 
         var by =  (event.by % sourceCanvas.width) + (event.by < 0 ? sourceCanvas.width : 0)
 
@@ -120,7 +154,7 @@ function dragMouse(event, canvas) {
         }
         
         if (event.flip > 0 && rowOrColumn != (event.size - 1) / 2) {
-            cellTop = Math.floor((event.size - 1 - rowOrColumn) * canvas.height / event.size);
+            cellTop = Math.floor((event.size - 1 - rowOrColumn) * targetCanvas.height / event.size);
             ctx.drawImage(sourceCanvas, 
                           0, cellTop, sourceCanvas.width - by, cellHeight,
                           by, cellTop, sourceCanvas.width - by, cellHeight);
@@ -133,8 +167,8 @@ function dragMouse(event, canvas) {
         }
     }
     else {
-        var cellLeft = Math.floor(rowOrColumn * canvas.width / event.size);
-        var cellWidth = Math.floor(canvas.width / event.size);
+        var cellLeft = Math.floor(rowOrColumn * targetCanvas.width / event.size);
+        var cellWidth = Math.floor(targetCanvas.width / event.size);
 
         var by =  (event.by % sourceCanvas.height) + (event.by < 0 ? sourceCanvas.height : 0)
 
@@ -150,34 +184,19 @@ function dragMouse(event, canvas) {
         
         
         if (event.flip > 1 && rowOrColumn != (event.size - 1) / 2) {
-            cellLeft = Math.floor((event.size - 1 - rowOrColumn) * canvas.width / event.size);
+            cellLeft = Math.floor((event.size - 1 - rowOrColumn) * targetCanvas.width / event.size);
             ctx.drawImage(sourceCanvas, 
                           cellLeft, 0, cellWidth, sourceCanvas.height - by,
                           cellLeft, by, cellWidth, sourceCanvas.height - by);
             
             if (by != 0) {
                 ctx.drawImage(sourceCanvas, 
-                              cellLeft, sourceCanvas.height - by, cellWidth, by,
+                              cellLeft, targetCanvas.height - by, cellWidth, by,
                               cellLeft, 0, cellWidth, by);
             }
         }
     } 
 }
-
-function showLines(canvas) {
-    if (oCanvasGrid) {
-	const ctx = canvas.getContext('2d');
-	ctx.drawImage(oCanvasGrid, 0, 0);
-    }
-}
-
-function hideLines(canvas) {
-    if (oCanvas) {
-	const ctx = canvas.getContext('2d');
-	ctx.drawImage(oCanvas, 0, 0);
-    }
-}
-
 
 function copySquare(src, srcX, srcY, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight, hflip, vflip) {
     if (hflip) {
@@ -199,40 +218,36 @@ function copySquare(src, srcX, srcY, srcWidth, srcHeight, dst, dstX, dstY, dstWi
     dst.setTransform(1, 0, 0, 1, 0, 0);
 }
 
-function redraw(event, canvas) {
-    if (!canvas) {
-        canvas = document.getElementById(event.canvasId)
-        if (!canvas) {
-            console.log("no canvas!")
-            return;
-        }
-    }
+function drawOnscreen(event) {
+    var ctx = event.targetCanvas.getContext("2d");
+    ctx.drawImage(event.sourceCanvas, 0, 0);
+}
 
-    var size = event.size || 3;
+function redrawOffscreen(event) {
+    let size = event.size || 3;
+    let canvasWidth = event.canvasWidth;
+    let canvasHeight = event.canvasHeight;
 
-    let canvasWidth = canvas.width;
-    let canvasHeight = canvas.height;
+    let canvasPlain = document.createElement("canvas");
+    canvasPlain.width = canvasWidth * 2;
+    canvasPlain.height = canvasHeight * 2;
 
-    if (!oCanvas) {
-	oCanvas = document.createElement("canvas");
-	oCanvas.width = canvasWidth * 2;
-	oCanvas.height = canvasHeight * 2;
-	oCanvasGrid = document.createElement("canvas");
-	oCanvasGrid.width = canvasWidth * 2;
-	oCanvasGrid.height = canvasHeight * 2;
-    }
+    let canvasGrid = document.createElement("canvas");
+    canvasGrid.width = canvasWidth * 2;
+    canvasGrid.height = canvasHeight * 2;
 
     var img = new Image();
+    var imgLoad$ = Rx.Observable.fromEvent(img, "load")
     img.src = "./dist/img/" + event.imageFile
-    img.onload = function() {
+    imgLoad$.subscribe(function() {
         var deltaWidth = canvasWidth / size;
         var deltaHeight = canvasHeight / size;
 
         var imgDeltaWidth = img.width / size;
         var imgDeltaHeight = img.height / size;
 
-	var oContext = oCanvas.getContext("2d");
-	var oContextGrid = oCanvasGrid.getContext("2d");
+	var oContext = canvasPlain.getContext("2d");
+	var oContextGrid = canvasGrid.getContext("2d");
 
         // this is where we have to loop over the squares...
         for (var i=0; i<size; i++) {
@@ -243,51 +258,45 @@ function redraw(event, canvas) {
             }
         }
 
-	var ctx = canvas.getContext("2d");
-	ctx.drawImage(oCanvas, 0, 0);
-
-        // add the flipped versions as appropriate
-        for (var v=0; v<2; v++) {
-            for (var h=0; h<2; h++) {
-                if (h > 0 || v > 0) {
-                    let hflip = (h > 0 && event.hflip);
-                    let vflip = (v > 0 && event.vflip);
-                    copySquare(canvas, 0, 0, canvasWidth, canvasHeight, oContext, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
-                    copySquare(canvas, 0, 0, canvasWidth, canvasHeight, oContextGrid, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
-                }
-            }
-        }
+//        // add the flipped versions as appropriate
+//        for (var v=0; v<2; v++) {
+//            for (var h=0; h<2; h++) {
+//                if (h > 0 || v > 0) {
+//                    let hflip = (h > 0 && event.hflip);
+//                    let vflip = (v > 0 && event.vflip);
+//                    copySquare(oContext, 0, 0, canvasWidth, canvasHeight, oContext, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
+//                    copySquare(oContext, 0, 0, canvasWidth, canvasHeight, oContextGrid, h * canvasWidth, v * canvasHeight, canvasWidth, canvasHeight, hflip, vflip);
+//                }
+//            }
+//        }
 
 	for (var j = 0; j<=4 * size; j++) {
 	    oContextGrid.beginPath();
 	    oContextGrid.moveTo(j * deltaWidth, 0);
-	    oContextGrid.lineTo(j * deltaWidth, oCanvas.height);
+	    oContextGrid.lineTo(j * deltaWidth, canvasHeight);
 	    oContextGrid.stroke();
 	    
 	    oContextGrid.beginPath();
 	    oContextGrid.moveTo(0, j * deltaHeight);
-	    oContextGrid.lineTo(oCanvas.width, j * deltaHeight);
+	    oContextGrid.lineTo(canvasWidth, j * deltaHeight);
 	    oContextGrid.stroke();
 	}
 
-        if (event.showGrid == 'always') {
-	    ctx.drawImage(oCanvasGrid, 0, 0);
-        }
-        else {
-	    ctx.drawImage(oCanvas, 0, 0);
-        }
+        
 
-        var debugCanvas = document.getElementById("debugCanvas");
-        if (debugCanvas) {
-	    var debugCtx = debugCanvas.getContext("2d");
-            debugCtx.drawImage(oCanvasGrid, 0, 0);
-        }
-    }
-    img.onerror = function(err) {
-	// TODO do something useful
-	console.log("Error loading image: " + err);
-    }
+    })
 
+    return {
+        size : event.size,
+        showGrid : event.showGrid,
+        hflip : event.hflip,
+        vflip : event.vflip,
+        canvasWidth : event.canvasWidth,
+        canvasHeight : event.canvasHeight,
+        canvasPlain : canvasPlain,
+        canvasGrid : canvasGrid,
+        imgLoad : imgLoad$
+    };
 }
 
 function makeMouseTracker(canvas, source$) {
@@ -297,22 +306,9 @@ function makeMouseTracker(canvas, source$) {
     
     const mouseDown$ = Rx.DOM.mousedown(canvas);
     
-    const down$ = mouseDown$.map(function (md) {
-	md.preventDefault();
-	
-	return {eventType: "down", x : md.clientX, y : md.clientY};
-    });
-    
-    down$.withLatestFrom(showGrid$, function(x, sg) {return sg === "on-press" || sg === "always";}) 
-        .subscribe(sg => {if (sg) {showLines(canvas);}})
-    
     const dragger$ = mouseDown$.flatMap(function (md) {
 	md.preventDefault();
 
-	var dragCanvas = document.createElement("canvas");
-	dragCanvas.width = canvas.width * 2;
-	dragCanvas.height = canvas.height * 2;
-        
 	var mouseMove$ =  Rx.DOM.mousemove(document)
 	    .map(function (mm) {return {startX : md.offsetX, startY : md.offsetY, x : mm.offsetX - md.offsetX, y : mm.offsetY - md.offsetY};})
 	    .filter(function(p) {return p.x != p.y;});
@@ -337,20 +333,10 @@ function makeMouseTracker(canvas, source$) {
 	    vert : function(p) {return p.startX;}
 	};
         
-	const makeOutput = function(p, hv, sz, sg, fl) {
-	    var dragctx = dragCanvas.getContext("2d");
-
-            if (sg == 'never') {
-	        dragctx.drawImage(oCanvas, 0, 0);
-            }
-            else {
-	        dragctx.drawImage(oCanvasGrid, 0, 0);
-            }
-            
-	    return {eventType: "move", dragCanvas : dragCanvas, showGrid : sg, size : sz, direction : hv, flip : fl, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
-	}
-        
-	const movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, flip$, makeOutput);
+	const movesWithDirection$ =  mouseMove$.withLatestFrom(firstDirection$, size$, showGrid$, flip$, 
+                                                               function(p, hv, sz, sg, fl) {
+	                                                           return {eventType: "move", showGrid : sg, size : sz, direction : hv, flip : fl, by : offsetFunctionMap[hv](p), at : startFunctionMap[hv](p)};
+	                                                       });
         
 	const movesUntilDone$ = movesWithDirection$.takeUntil(Rx.DOM.mouseup(document).merge(Rx.DOM.mouseleave(document)));
 
@@ -362,7 +348,6 @@ function makeMouseTracker(canvas, source$) {
                 at : p.at,
                 size : p.size,
                 flip : p.flip,
-                dragCanvas : dragCanvas,
                 showGrid : p.showGrid
 	    };
 	});
@@ -381,10 +366,20 @@ function makeMouseTracker(canvas, source$) {
 	    })
 
 
-	return movesUntilDone$.merge(finishDrag$).merge(moveDone$.delay(slidingTimeMs + (2 * slidingTimeMs) / slidingFrames))
+	return Rx.Observable.just(md)
+            .merge(movesUntilDone$)
+            .merge(finishDrag$)
+            .merge(moveDone$.delay(slidingTimeMs + (2 * slidingTimeMs) / slidingFrames))
     });
 
     return dragger$;
+}
+
+function printMe(name) {
+    return function(x) {
+        console.log("printing " + name)
+        console.log(x)
+    }
 }
 
 module.exports = GridDriver
